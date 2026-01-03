@@ -3,6 +3,33 @@ const AuditLog = require('../models/AuditLog');
 const Reflection = require('../models/Reflection');
 
 class AttendanceController {
+  // GET /attendance/timeline?date=YYYY-MM-DD - Get timeline data (no auth required)
+  static async getTimeline(req, res) {
+    try {
+      const { date } = req.query;
+      
+      if (!date) {
+        return res.status(400).json({ error: 'Date parameter is required' });
+      }
+      
+      const sessions = await AttendanceSession.getSessionsByDate(date);
+      
+      // Return only non-sensitive data for timeline display
+      const timelineData = sessions.map(s => ({
+        user_id: s.user_id,
+        alias: s.alias,
+        role: s.role,
+        check_in_time: s.check_in_time,
+        check_out_time: s.check_out_time,
+      }));
+      
+      res.json(timelineData);
+    } catch (error) {
+      console.error('Error fetching timeline:', error);
+      res.status(500).json({ error: 'Failed to fetch timeline' });
+    }
+  }
+
   // GET /attendance/day?date=YYYY-MM-DD - Get attendance for a specific day
   static async getByDay(req, res) {
     try {

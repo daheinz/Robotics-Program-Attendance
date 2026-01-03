@@ -36,6 +36,7 @@ export const presenceApi = {
 
 // Attendance endpoints
 export const attendanceApi = {
+  getTimeline: (date) => api.get('/attendance/timeline', { params: { date } }),
   getByDay: (date) => api.get('/attendance/day', { params: { date } }),
   getByUser: (userId) => api.get(`/attendance/user/${userId}`),
   getCurrentStatus: () => api.get('/attendance/me'),

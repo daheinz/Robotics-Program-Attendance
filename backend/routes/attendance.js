@@ -55,6 +55,9 @@ router.post('/check-out', requireAuth, validateCheckOut, handleValidationErrors,
 // GET /attendance/me - Get current user's attendance status
 router.get('/me', requireAuth, AttendanceController.getCurrentUserStatus);
 
+// GET /attendance/timeline?date=YYYY-MM-DD - Get timeline data (public, no auth required)
+router.get('/timeline', validateDate, handleValidationErrors, AttendanceController.getTimeline);
+
 // GET /attendance/day?date=YYYY-MM-DD - Get attendance for a specific day
 router.get('/day', requireMentorOrCoach, validateDate, handleValidationErrors, AttendanceController.getByDay);
 

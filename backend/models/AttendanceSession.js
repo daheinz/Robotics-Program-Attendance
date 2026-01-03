@@ -98,6 +98,16 @@ class AttendanceSession {
     return result.rows;
   }
 
+  static async getActiveSessions() {
+    const query = `
+      SELECT * FROM attendance_sessions 
+      WHERE check_out_time IS NULL
+      ORDER BY check_in_time ASC
+    `;
+    const result = await db.query(query);
+    return result.rows;
+  }
+
   static async getSessionsByDate(date) {
     const query = `
       SELECT 

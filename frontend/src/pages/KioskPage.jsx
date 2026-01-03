@@ -71,6 +71,9 @@ function KioskPage({ onAuth }) {
     <div className="kiosk-page">
       <header className="kiosk-header">
         <h1>Robotics Attendance Kiosk</h1>
+        <a href="/presenceboard" className="presenceboard-link" style={{ color: '#4fd1c5', fontWeight: 'bold', fontSize: '1.1rem', marginLeft: '1.5rem', textDecoration: 'underline' }}>
+          View Presence Board
+        </a>
       </header>
 
       {error && <div className="error-message">{error}</div>}
