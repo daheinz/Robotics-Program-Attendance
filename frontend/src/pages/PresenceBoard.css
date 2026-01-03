@@ -1,0 +1,79 @@
+.presence-board {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+}
+
+.board-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 3rem;
+}
+
+.board-header h1 {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.update-time {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.presence-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.presence-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.presence-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.alias {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #666;
+}
+
+.check-in-time {
+  font-size: 0.95rem;
+}
+
+.duration {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #007bff;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.empty-state p {
+  color: white;
+  font-size: 1.5rem;
+}

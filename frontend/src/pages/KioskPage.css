@@ -1,0 +1,179 @@
+.kiosk-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+}
+
+.kiosk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.kiosk-header h1 {
+  color: white;
+  font-size: 2.5rem;
+}
+
+.btn-back {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-back:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.user-selection {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.search-box {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.user-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.user-button {
+  position: relative;
+  padding: 1rem 0.5rem;
+  background: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.user-button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Role-specific accents */
+.user-button.student {
+  border-left: 6px solid #38b2ac; /* teal */
+}
+.user-button.mentor {
+  border-left: 6px solid #ed8936; /* orange */
+}
+.user-button.coach {
+  border-left: 6px solid #48bb78; /* green */
+}
+
+.user-button.student .role-badge {
+  color: #319795;
+}
+.user-button.mentor .role-badge {
+  color: #dd6b20;
+}
+.user-button.coach .role-badge {
+  color: #2f855a;
+}
+
+.role-badge {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: capitalize;
+}
+
+.pin-entry,
+.checkout-form {
+  max-width: 480px;
+  margin: 0 auto;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.18);
+  text-align: center;
+}
+
+.pin-entry h2,
+.checkout-form h2 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.pin-entry p {
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.pin-input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1.6rem;
+  text-align: center;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.4rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.button-group .btn {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+}
+
+.reflection-section {
+  margin: 2rem 0;
+  text-align: left;
+}
+
+.reflection-section label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.reflection-textarea {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.success-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+
+.success-screen h1 {
+  color: white;
+  font-size: 3rem;
+  text-align: center;
+}
