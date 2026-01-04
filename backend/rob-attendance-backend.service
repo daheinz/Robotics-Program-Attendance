@@ -1,0 +1,18 @@
+[Unit]
+Description=Robotics Attendance Backend
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+WorkingDirectory=/var/www/RoboticsAttendance/backend
+EnvironmentFile=/var/www/RoboticsAttendance/backend/.env
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=rob-attendance-backend
+
+[Install]
+WantedBy=multi-user.target
