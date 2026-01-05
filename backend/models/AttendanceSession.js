@@ -150,6 +150,42 @@ class AttendanceSession {
     return result.rows;
   }
 
+  static async getSessionsByUsersAndDateRange(userIds, startDate, endDate) {
+    const params = [];
+    const conditions = [];
+
+    if (startDate) {
+      params.push(startDate);
+      conditions.push(`DATE(a.check_in_time) >= $${params.length}`);
+    }
+    if (endDate) {
+      params.push(endDate);
+      conditions.push(`DATE(a.check_in_time) <= $${params.length}`);
+    }
+    if (userIds && userIds.length > 0) {
+      params.push(userIds);
+      conditions.push(`a.user_id = ANY($${params.length})`);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const query = `
+      SELECT 
+        a.*, 
+        u.alias, 
+        u.role, 
+        r.text AS reflection_text
+      FROM attendance_sessions a
+      INNER JOIN users u ON a.user_id = u.id
+      LEFT JOIN reflections r ON a.id = r.attendance_id
+      ${whereClause}
+      ORDER BY a.check_in_time ASC
+    `;
+
+    const result = await db.query(query, params);
+    return result.rows;
+  }
+
   static async exportSessions(startDate, endDate) {
     const query = `
       SELECT 
@@ -169,6 +205,12 @@ class AttendanceSession {
     `;
     const result = await db.query(query, [startDate, endDate]);
     return result.rows;
+  }
+
+  static async delete(sessionId) {
+    const query = 'DELETE FROM attendance_sessions WHERE id = $1';
+    await db.query(query, [sessionId]);
+    return true;
   }
 }
 

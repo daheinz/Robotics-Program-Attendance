@@ -3,6 +3,19 @@ const AuditLog = require('../models/AuditLog');
 const Reflection = require('../models/Reflection');
 
 class AttendanceController {
+  // GET /attendance/range?start_date&end_date&user_ids (comma-separated)
+  static async getByRange(req, res) {
+    try {
+      const { start_date, end_date, user_ids } = req.query;
+      const userIds = user_ids ? user_ids.split(',').map(id => id.trim()).filter(Boolean) : [];
+      const sessions = await AttendanceSession.getSessionsByUsersAndDateRange(userIds, start_date, end_date);
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching attendance range:', error);
+      res.status(500).json({ error: 'Failed to fetch attendance' });
+    }
+  }
+
   // GET /attendance/timeline?date=YYYY-MM-DD - Get timeline data (no auth required)
   static async getTimeline(req, res) {
     try {
@@ -283,6 +296,136 @@ class AttendanceController {
     } catch (error) {
       console.error('Error getting user status:', error);
       res.status(500).json({ error: 'Failed to get status' });
+    }
+  }
+
+  // PATCH /attendance/:sessionId/admin - Admin update (times + reflection) with audit reason
+  static async adminUpdateSession(req, res) {
+    try {
+      const { sessionId } = req.params;
+      const { checkInTime, checkOutTime, reflectionText, auditReason } = req.body;
+
+      if (!auditReason) {
+        return res.status(400).json({ error: 'auditReason is required' });
+      }
+      if (!checkInTime || !checkOutTime) {
+        return res.status(400).json({ error: 'checkInTime and checkOutTime are required' });
+      }
+
+      const start = new Date(checkInTime);
+      const end = new Date(checkOutTime);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(400).json({ error: 'Invalid date format' });
+      }
+      if (end <= start) {
+        return res.status(400).json({ error: 'checkOutTime must be after checkInTime' });
+      }
+      const diffHours = (end - start) / (1000 * 60 * 60);
+      if (diffHours > 12) {
+        return res.status(400).json({ error: 'Duration cannot exceed 12 hours' });
+      }
+
+      const session = await AttendanceSession.update(sessionId, { checkInTime, checkOutTime });
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+
+      if (reflectionText) {
+        await Reflection.upsertByAttendance({ attendanceId: sessionId, userId: session.user_id, text: reflectionText });
+      }
+
+      if (req.user) {
+        await AuditLog.create({
+          actorUserId: req.user.id,
+          actionType: 'ADMIN_UPDATE_ATTENDANCE',
+          targetUserId: session.user_id,
+          details: { sessionId, checkInTime, checkOutTime, reflectionText, auditReason },
+        });
+      }
+
+      res.json(session);
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+      res.status(500).json({ error: 'Failed to update attendance' });
+    }
+  }
+
+  // POST /attendance/admin - Create a manual session with audit reason
+  static async adminCreate(req, res) {
+    try {
+      const { userId, checkInTime, checkOutTime, reflectionText, auditReason } = req.body;
+      if (!auditReason) {
+        return res.status(400).json({ error: 'auditReason is required' });
+      }
+      if (!userId || !checkInTime) {
+        return res.status(400).json({ error: 'userId and checkInTime are required' });
+      }
+      if (!checkOutTime) {
+        return res.status(400).json({ error: 'checkOutTime is required for admin create' });
+      }
+
+      const start = new Date(checkInTime);
+      const end = new Date(checkOutTime);
+      if (end <= start) {
+        return res.status(400).json({ error: 'checkOutTime must be after checkInTime' });
+      }
+      const diffHours = (end - start) / (1000 * 60 * 60);
+      if (diffHours > 12) {
+        return res.status(400).json({ error: 'Duration cannot exceed 12 hours' });
+      }
+
+      const session = await AttendanceSession.create(userId);
+      const updatedSession = await AttendanceSession.update(session.id, { checkInTime, checkOutTime });
+
+      if (reflectionText) {
+        await Reflection.upsertByAttendance({ attendanceId: session.id, userId, text: reflectionText });
+      }
+
+      if (req.user) {
+        await AuditLog.create({
+          actorUserId: req.user.id,
+          actionType: 'ADMIN_CREATE_ATTENDANCE',
+          targetUserId: userId,
+          details: { sessionId: session.id, checkInTime, checkOutTime, reflectionText, auditReason },
+        });
+      }
+
+      res.status(201).json(updatedSession);
+    } catch (error) {
+      console.error('Error creating attendance:', error);
+      res.status(500).json({ error: 'Failed to create attendance' });
+    }
+  }
+
+  // DELETE /attendance/:sessionId - Admin delete with audit reason
+  static async adminDelete(req, res) {
+    try {
+      const { sessionId } = req.params;
+      const { auditReason } = req.body;
+      if (!auditReason) {
+        return res.status(400).json({ error: 'auditReason is required' });
+      }
+
+      const session = await AttendanceSession.findById(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+
+      await AttendanceSession.delete(sessionId);
+
+      if (req.user) {
+        await AuditLog.create({
+          actorUserId: req.user.id,
+          actionType: 'ADMIN_DELETE_ATTENDANCE',
+          targetUserId: session.user_id,
+          details: { sessionId, auditReason },
+        });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting attendance:', error);
+      res.status(500).json({ error: 'Failed to delete attendance' });
     }
   }
 }

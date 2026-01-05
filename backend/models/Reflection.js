@@ -28,6 +28,21 @@ class Reflection {
     return result.rows[0];
   }
 
+  static async upsertByAttendance({ attendanceId, userId, text }) {
+    const existing = await this.findByAttendanceId(attendanceId);
+    if (existing) {
+      const query = `
+        UPDATE reflections
+        SET text = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE attendance_id = $2
+        RETURNING *
+      `;
+      const result = await db.query(query, [text, attendanceId]);
+      return result.rows[0];
+    }
+    return this.create({ attendanceId, userId, text });
+  }
+
   static async findByUserId(userId) {
     const query = `
       SELECT r.*, a.check_in_time, a.check_out_time

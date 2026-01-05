@@ -28,6 +28,21 @@ const validateCorrectSession = [
   body('checkOutTime').optional().isISO8601(),
 ];
 
+const validateAdminUpdate = [
+  body('checkInTime').isISO8601().withMessage('checkInTime is required and must be ISO8601'),
+  body('checkOutTime').isISO8601().withMessage('checkOutTime is required and must be ISO8601'),
+  body('auditReason').isString().withMessage('auditReason is required'),
+  body('reflectionText').optional().isString(),
+];
+
+const validateAdminCreate = [
+  body('userId').isUUID().withMessage('userId is required and must be valid'),
+  body('checkInTime').isISO8601().withMessage('checkInTime is required and must be ISO8601'),
+  body('checkOutTime').isISO8601().withMessage('checkOutTime is required and must be ISO8601'),
+  body('auditReason').isString().withMessage('auditReason is required'),
+  body('reflectionText').optional().isString(),
+];
+
 const validateCreateManual = [
   body('userId').isUUID().withMessage('User ID is required and must be valid'),
   body('checkInTime').isISO8601().withMessage('Check-in time is required and must be ISO8601'),
@@ -58,17 +73,29 @@ router.get('/me', requireAuth, AttendanceController.getCurrentUserStatus);
 // GET /attendance/timeline?date=YYYY-MM-DD - Get timeline data (public, no auth required)
 router.get('/timeline', validateDate, handleValidationErrors, AttendanceController.getTimeline);
 
+// GET /attendance/range?start_date&end_date&user_ids=comma,list
+router.get('/range', requireMentorOrCoach, handleValidationErrors, AttendanceController.getByRange);
+
 // GET /attendance/day?date=YYYY-MM-DD - Get attendance for a specific day
 router.get('/day', requireMentorOrCoach, validateDate, handleValidationErrors, AttendanceController.getByDay);
 
 // GET /attendance/export - Export attendance data (must come before /:sessionId to avoid conflict)
 router.get('/export', requireMentorOrCoach, validateDateRange, handleValidationErrors, AttendanceController.export);
 
+// POST /attendance/admin - Admin create session
+router.post('/admin', requireMentorOrCoach, validateAdminCreate, handleValidationErrors, AttendanceController.adminCreate);
+
 // GET /attendance/user/:id - Get attendance history for a user
 router.get('/user/:id', requireMentorOrCoach, validateUserId, handleValidationErrors, AttendanceController.getByUser);
 
+// PATCH /attendance/:sessionId/admin - Admin update session
+router.patch('/:sessionId/admin', requireMentorOrCoach, validateSessionId, validateAdminUpdate, handleValidationErrors, AttendanceController.adminUpdateSession);
+
 // PATCH /attendance/:sessionId - Correct an attendance session
 router.patch('/:sessionId', requireMentorOrCoach, validateSessionId, validateCorrectSession, handleValidationErrors, AttendanceController.correctSession);
+
+// DELETE /attendance/:sessionId - Admin delete session
+router.delete('/:sessionId', requireMentorOrCoach, validateSessionId, handleValidationErrors, AttendanceController.adminDelete);
 
 // POST /attendance - Manually create an attendance session (generic catch-all, must be last)
 router.post('/', requireMentorOrCoach, validateCreateManual, handleValidationErrors, AttendanceController.createManual);

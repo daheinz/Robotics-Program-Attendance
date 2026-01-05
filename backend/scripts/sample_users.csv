@@ -1,0 +1,5 @@
+alias,first_name,middle_name,last_name,role,pin,parent_name,parent_phone,parent_relationship
+alice,Alice,,Anderson,student,1234,Carol Anderson,555-111-2222,Mother
+bob,Bob,B.,Brown,student,4321,Daniel Brown,555-333-4444,Father
+mentor_jane,Jane,,Doe,mentor,9999,,,
+coach_kim,Kim,,Nguyen,coach,0000,,,

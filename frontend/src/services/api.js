@@ -36,6 +36,11 @@ export const presenceApi = {
 
 // Attendance endpoints
 export const attendanceApi = {
+  getByRange: (startDate, endDate, userIds) => 
+    api.get('/attendance/range', { params: { start_date: startDate, end_date: endDate, user_ids: userIds?.join(',') } }),
+  adminCreate: (data) => api.post('/attendance/admin', data),
+  adminUpdate: (sessionId, data) => api.patch(`/attendance/${sessionId}/admin`, data),
+  adminDelete: (sessionId, auditReason) => api.delete(`/attendance/${sessionId}`, { data: { auditReason } }),
   getTimeline: (date) => api.get('/attendance/timeline', { params: { date } }),
   getByDay: (date) => api.get('/attendance/day', { params: { date } }),
   getByUser: (userId) => api.get(`/attendance/user/${userId}`),

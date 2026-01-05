@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { userApi, settingsApi, contactApi } from '../services/api';
+import { userApi, settingsApi, contactApi, attendanceApi } from '../services/api';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
@@ -633,17 +633,276 @@ function ContactsTab({ userRole }) {
 }
 
 function AttendanceTab() {
+  const [users, setUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [range, setRange] = useState('today');
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [editSessionId, setEditSessionId] = useState(null);
+  const [editForm, setEditForm] = useState({ checkInTime: '', checkOutTime: '', reflectionText: '', auditReason: '' });
+  const [createForm, setCreateForm] = useState({ userId: '', checkInTime: '', checkOutTime: '', reflectionText: '', auditReason: '' });
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  useEffect(() => {
+    fetchSessions();
+  }, [range, selectedUsers]);
+
+  const loadUsers = async () => {
+    try {
+      const res = await userApi.getAll();
+      setUsers(res.data.filter(u => u.role === 'student' || u.role === 'mentor'));
+    } catch (err) {
+      setError('Failed to load users');
+    }
+  };
+
+  const computeRange = () => {
+    const today = new Date();
+    const format = (d) => d.toISOString().slice(0, 10);
+    if (range === 'today') {
+      return { start: format(today), end: format(today) };
+    }
+    if (range === 'last7') {
+      const start = new Date(today);
+      start.setDate(start.getDate() - 6);
+      return { start: format(start), end: format(today) };
+    }
+    if (range === 'last30') {
+      const start = new Date(today);
+      start.setDate(start.getDate() - 29);
+      return { start: format(start), end: format(today) };
+    }
+    return { start: undefined, end: undefined }; // all time
+  };
+
+  const validateSessionTimes = (checkInStr, checkOutStr) => {
+    if (!checkInStr || !checkOutStr) return 'Check-in and check-out are required';
+    const checkIn = new Date(checkInStr);
+    const checkOut = new Date(checkOutStr);
+    if (Number.isNaN(checkIn.valueOf()) || Number.isNaN(checkOut.valueOf())) return 'Enter valid dates/times';
+    if (checkOut <= checkIn) return 'Check-out must be after check-in';
+    const hours = (checkOut - checkIn) / (1000 * 60 * 60);
+    if (hours > 12) return 'Session cannot exceed 12 hours';
+    return null;
+  };
+
+  const fetchSessions = async () => {
+    if (selectedUsers.length === 0) {
+      setSessions([]);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    const { start, end } = computeRange();
+    try {
+      const res = await attendanceApi.getByRange(start, end, selectedUsers);
+      setSessions(res.data);
+    } catch (err) {
+      setError('Failed to load attendance');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleUser = (id) => {
+    setSelectedUsers((prev) => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
+  };
+
+  const startEdit = (session) => {
+    setEditSessionId(session.id);
+    setEditForm({
+      checkInTime: session.check_in_time ? session.check_in_time.slice(0, 16) : '',
+      checkOutTime: session.check_out_time ? session.check_out_time.slice(0, 16) : '',
+      reflectionText: session.reflection_text || '',
+      auditReason: '',
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditSessionId(null);
+    setEditForm({ checkInTime: '', checkOutTime: '', reflectionText: '', auditReason: '' });
+  };
+
+  const saveEdit = async () => {
+    if (!editSessionId) return;
+    if (!editForm.auditReason) {
+      setError('Audit reason is required');
+      return;
+    }
+    const validationError = validateSessionTimes(editForm.checkInTime, editForm.checkOutTime);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    try {
+      await attendanceApi.adminUpdate(editSessionId, {
+        checkInTime: new Date(editForm.checkInTime).toISOString(),
+        checkOutTime: new Date(editForm.checkOutTime).toISOString(),
+        reflectionText: editForm.reflectionText,
+        auditReason: editForm.auditReason,
+      });
+      cancelEdit();
+      fetchSessions();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to save changes');
+    }
+  };
+
+  const handleDelete = async (sessionId) => {
+    const reason = prompt('Provide an audit reason for delete:');
+    if (!reason) return;
+    try {
+      await attendanceApi.adminDelete(sessionId, reason);
+      fetchSessions();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to delete');
+    }
+  };
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    if (!createForm.auditReason) {
+      setError('Audit reason is required');
+      return;
+    }
+    const validationError = validateSessionTimes(createForm.checkInTime, createForm.checkOutTime);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    try {
+      await attendanceApi.adminCreate({
+        userId: createForm.userId,
+        checkInTime: new Date(createForm.checkInTime).toISOString(),
+        checkOutTime: new Date(createForm.checkOutTime).toISOString(),
+        reflectionText: createForm.reflectionText,
+        auditReason: createForm.auditReason,
+      });
+      setCreateForm({ userId: '', checkInTime: '', checkOutTime: '', reflectionText: '', auditReason: '' });
+      fetchSessions();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to create session');
+    }
+  };
+
+  const formatDateTime = (dt) => dt ? new Date(dt).toLocaleString() : '';
+
   return (
-    <div className="tab-content">
-      <h2>Attendance Management</h2>
-      <p>Attendance management interface will be implemented here.</p>
-      <p>Features:</p>
-      <ul>
-        <li>View daily attendance</li>
-        <li>Correct attendance sessions</li>
-        <li>Export attendance data</li>
-        <li>View attendance history</li>
-      </ul>
+    <div className="tab-content attendance-tab">
+      <div className="attendance-header">
+        <h2>Attendance Management</h2>
+        <div className="range-buttons">
+          {[
+            { key: 'today', label: 'Today' },
+            { key: 'last7', label: 'Last 7 days' },
+            { key: 'last30', label: 'Last 30 days' },
+            { key: 'all', label: 'All time' },
+          ].map(r => (
+            <button key={r.key} className={`btn btn-sm ${range === r.key ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setRange(r.key)}>
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {error && <div className="alert alert-error">{error}</div>}
+
+      <div className="attendance-layout">
+        <div className="user-list">
+          <h3>People</h3>
+          <div className="user-list-body">
+            {users.map(u => (
+              <label key={u.id} className="user-checkbox">
+                <input type="checkbox" checked={selectedUsers.includes(u.id)} onChange={() => toggleUser(u.id)} />
+                <span className={`role-badge role-${u.role}`}>{u.role}</span> {u.alias}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="attendance-main">
+          <div className="create-session">
+            <h3>Add Session</h3>
+            <form onSubmit={handleCreate} className="create-form">
+              <select value={createForm.userId} onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })} required>
+                <option value="">Select user</option>
+                {users.map(u => (
+                  <option key={u.id} value={u.id}>{u.alias} ({u.role})</option>
+                ))}
+              </select>
+              <input type="datetime-local" value={createForm.checkInTime} onChange={(e) => setCreateForm({ ...createForm, checkInTime: e.target.value })} required />
+              <input type="datetime-local" value={createForm.checkOutTime} onChange={(e) => setCreateForm({ ...createForm, checkOutTime: e.target.value })} required />
+              <input type="text" placeholder="Reflection (optional)" value={createForm.reflectionText} onChange={(e) => setCreateForm({ ...createForm, reflectionText: e.target.value })} />
+              <input type="text" placeholder="Audit reason (required)" value={createForm.auditReason} onChange={(e) => setCreateForm({ ...createForm, auditReason: e.target.value })} required />
+              <button type="submit" className="btn btn-success btn-sm">Create</button>
+            </form>
+          </div>
+
+          {loading ? (
+            <div className="loading">Loading attendance...</div>
+          ) : sessions.length === 0 ? (
+            <div className="no-data">No sessions for the selected criteria.</div>
+          ) : (
+            <table className="attendance-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Check In</th>
+                  <th>Check Out</th>
+                  <th>Reflection</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sessions.map((s) => (
+                  <tr key={s.id}>
+                    <td>{s.alias} ({s.role})</td>
+                    <td>
+                      {editSessionId === s.id ? (
+                        <input type="datetime-local" value={editForm.checkInTime} onChange={(e) => setEditForm({ ...editForm, checkInTime: e.target.value })} />
+                      ) : (
+                        formatDateTime(s.check_in_time)
+                      )}
+                    </td>
+                    <td>
+                      {editSessionId === s.id ? (
+                        <input type="datetime-local" value={editForm.checkOutTime} onChange={(e) => setEditForm({ ...editForm, checkOutTime: e.target.value })} />
+                      ) : (
+                        formatDateTime(s.check_out_time)
+                      )}
+                    </td>
+                    <td>
+                      {editSessionId === s.id ? (
+                        <input type="text" value={editForm.reflectionText} onChange={(e) => setEditForm({ ...editForm, reflectionText: e.target.value })} />
+                      ) : (
+                        s.reflection_text || ''
+                      )}
+                    </td>
+                    <td className="actions">
+                      {editSessionId === s.id ? (
+                        <>
+                          <input type="text" placeholder="Audit reason" value={editForm.auditReason} onChange={(e) => setEditForm({ ...editForm, auditReason: e.target.value })} />
+                          <button className="btn btn-sm btn-success" onClick={saveEdit}>Save</button>
+                          <button className="btn btn-sm btn-secondary" onClick={cancelEdit}>Cancel</button>
+                        </>
+                      ) : (
+                        <>
+                          <button className="btn btn-sm btn-info" onClick={() => startEdit(s)}>Edit</button>
+                          <button className="btn btn-sm btn-danger" onClick={() => handleDelete(s.id)}>Delete</button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
