@@ -96,7 +96,20 @@ class UserController {
       const { id } = req.params;
       const updates = req.body;
 
-      const user = await User.update(id, updates);
+      // If a PIN is provided, handle it separately (hashing) via updatePin.
+      const { pin, ...otherUpdates } = updates;
+
+      let user = null;
+
+      if (Object.keys(otherUpdates).length > 0) {
+        user = await User.update(id, otherUpdates);
+      }
+
+      if (pin) {
+        await User.updatePin(id, pin);
+        // Refresh user after PIN update
+        user = await User.findById(id);
+      }
       
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
@@ -112,7 +125,12 @@ class UserController {
         });
       }
 
-      const { pin_hash, ...userWithoutPin } = user;
+      if (!user) {
+        // If no fields were updated (e.g., only pin handled but find returned null), try fetching
+        user = await User.findById(id);
+      }
+
+      const { pin_hash, ...userWithoutPin } = user || {};
       res.json(userWithoutPin);
     } catch (error) {
       console.error('Error updating user:', error);

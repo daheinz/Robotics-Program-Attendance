@@ -138,6 +138,11 @@ function UsersTab({ userRole }) {
       if (formData.alias !== editingUser.alias) {
         await userApi.updateAlias(editingUser.id, formData.alias);
       }
+
+      // Update PIN if provided
+      if (formData.pin) {
+        await userApi.updatePin(editingUser.id, formData.pin);
+      }
       
       setEditingUser(null);
       setFormData({
@@ -294,6 +299,18 @@ function UsersTab({ userRole }) {
                   />
                 </div>
               </>
+            )}
+
+            {editingUser && (
+              <div className="form-group">
+                <label>New PIN (leave blank to keep current PIN)</label>
+                <input
+                  type="password"
+                  value={formData.pin}
+                  onChange={(e) => setFormData({ ...formData, pin: e.target.value })}
+                  placeholder="Enter new PIN or leave blank"
+                />
+              </div>
             )}
 
             <div className="form-actions">

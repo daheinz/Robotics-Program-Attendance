@@ -19,6 +19,7 @@ const validateUpdateUser = [
   body('firstName').optional().isString().trim().notEmpty(),
   body('lastName').optional().isString().trim().notEmpty(),
   body('middleName').optional().isString().trim(),
+  body('pin').optional().isString().trim().notEmpty().withMessage('PIN, if provided, must be a non-empty string'),
 ];
 
 const validateUpdateAlias = [
