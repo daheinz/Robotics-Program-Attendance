@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { attendanceApi } from '../services/api';
+import api from '../services/api';
 import './PresenceBoard.css';
 
 
@@ -11,18 +12,23 @@ function getHourOffset(date) {
 
 function PresenceBoard() {
   const [sessions, setSessions] = useState([]);
+  const [absences, setAbsences] = useState({});
+  const [coreHours, setCoreHours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [now, setNow] = useState(new Date());
+  const [seasonType, setSeasonType] = useState('build');
 
   useEffect(() => {
     loadSessions();
+    loadAbsences();
+    loadCoreHours();
     const interval = setInterval(() => {
       setNow(new Date());
       loadSessions();
     }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [seasonType]);
 
   const loadSessions = async () => {
     try {
@@ -37,6 +43,36 @@ function PresenceBoard() {
     } catch (err) {
       setError('Failed to load attendance data');
       setLoading(false);
+    }
+  };
+
+  const loadAbsences = async () => {
+    try {
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      const response = await api.get('/absences/future');
+      
+      // Index absences by student ID
+      const absenceMap = {};
+      response.data.forEach(absence => {
+        if (absence.absence_date === dateStr) {
+          absenceMap[absence.student_id] = absence;
+        }
+      });
+      setAbsences(absenceMap);
+    } catch (err) {
+      console.error('Failed to load absences:', err);
+    }
+  };
+
+  const loadCoreHours = async () => {
+    try {
+      const response = await api.get('/core-hours', {
+        params: { seasonType }
+      });
+      setCoreHours(response.data);
+    } catch (err) {
+      console.error('Failed to load core hours:', err);
     }
   };
 
@@ -80,6 +116,9 @@ function PresenceBoard() {
     return <div className="loading">Loading presence board...</div>;
   }
 
+  const dayOfWeek = now.getDay();
+  const todaysCoreHours = coreHours.filter(ch => ch.day_of_week === dayOfWeek);
+
   return (
     <div className="presence-board">
       <header className="board-header" style={{ position: 'relative' }}>
@@ -87,10 +126,11 @@ function PresenceBoard() {
         <a href="/kiosk" className="kiosk-link" style={{ color: '#4fd1c5', fontWeight: 'bold', fontSize: '1.1rem', marginLeft: '1.5rem', textDecoration: 'underline' }}>
           Return to Kiosk
         </a>
-        <div className="timeline-guide" style={{ position: 'absolute', top: 0, right: 0, background: 'rgba(255,255,255,0.95)', color: '#222', borderRadius: 8, padding: '0.7em 1.2em', fontSize: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <div className="timeline-guide" style={{ position: 'absolute', top: 0, right: 0, background: 'rgba(255,255,255,0.95)', color: '#222', borderRadius: 8, padding: '0.7em 1.2em', fontSize: '0.95rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', maxWidth: '400px' }}>
           <strong>Legend:</strong><br />
           <span style={{ display: 'inline-block', width: 18, height: 10, background: '#4fd1c5', borderRadius: 3, marginRight: 6, verticalAlign: 'middle' }}></span> Past presence<br />
           <span style={{ display: 'inline-block', width: 18, height: 10, background: '#f6e05e', borderRadius: 3, marginRight: 6, verticalAlign: 'middle' }}></span> Still on site<br />
+          <span style={{ display: 'inline-block', width: 18, height: 10, background: '#90ee90', borderRadius: 3, marginRight: 6, verticalAlign: 'middle' }}></span> Excused Absence<br />
           <span style={{ display: 'inline-block', width: 3, height: 10, background: '#ff6b6b', borderRadius: 2, marginRight: 6, verticalAlign: 'middle' }}></span> Current time
         </div>
         <p className="update-time">
@@ -129,48 +169,44 @@ function PresenceBoard() {
               <p>No attendance records for today</p>
             </div>
           ) : (
-            userList.map(([userId, user]) => (
-              <div className="timeline-row" key={userId}>
-                <div className={`timeline-label user-label${user.role === 'mentor' || user.role === 'coach' ? ' bold-label' : ''}`}>
-                  {user.alias} {user.role === 'mentor' ? '(Mentor)' : user.role === 'coach' ? '(Coach)' : ''}
+            userList.map(([userId, user]) => {
+              const absence = absences[userId];
+              const isExcusedAbsent = absence && absence.status === 'approved';
+              
+              return (
+                <div className={`timeline-row${isExcusedAbsent ? ' excused-absent' : ''}`} key={userId}>
+                  <div className={`timeline-label user-label${isExcusedAbsent ? ' excused-label' : ''}${user.role === 'mentor' || user.role === 'coach' ? ' bold-label' : ''}`}>
+                    {user.alias} {user.role === 'mentor' ? '(Mentor)' : user.role === 'coach' ? '(Coach)' : ''}
+                    {isExcusedAbsent && <span className="excused-badge">Excused Absence</span>}
+                  </div>
+                  <div className="timeline-bars">
+                    {isExcusedAbsent ? (
+                      <div className="excused-bar" title={`Excused absence: ${absence.notes}`}></div>
+                    ) : (
+                      user.sessions.map((session, idx) => {
+                        const start = Math.max(getHourOffset(session.check_in_time), minHour);
+                        const rawEnd = session.check_out_time ? getHourOffset(session.check_out_time) : getHourOffset(now);
+                        // Clamp end time to current time (prevent future checkout times from displaying)
+                        const end = Math.min(rawEnd, getHourOffset(now));
+                        const clampedEnd = Math.min(end, maxHour);
+                        const left = ((start - minHour) / (maxHour - minHour)) * 100;
+                        const width = ((clampedEnd - start) / (maxHour - minHour)) * 100;
+                        const isActive = !session.check_out_time;
+                        
+                        return (
+                          <div
+                            key={idx}
+                            className={`timeline-bar${isActive ? ' active' : ''}`}
+                            style={{ left: `${left}%`, width: `${width}%` }}
+                            title={`In: ${new Date(session.check_in_time).toLocaleTimeString()}${session.check_out_time ? `\nOut: ${new Date(session.check_out_time).toLocaleTimeString()}` : '\nStill on site'}`}
+                          ></div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-                <div className="timeline-bars">
-                  {user.sessions.map((session, idx) => {
-                    const start = Math.max(getHourOffset(session.check_in_time), minHour);
-                    const rawEnd = session.check_out_time ? getHourOffset(session.check_out_time) : getHourOffset(now);
-                    // Clamp end time to current time (prevent future checkout times from displaying)
-                    const end = Math.min(rawEnd, getHourOffset(now));
-                    const clampedEnd = Math.min(end, maxHour);
-                    const left = ((start - minHour) / (maxHour - minHour)) * 100;
-                    const width = ((clampedEnd - start) / (maxHour - minHour)) * 100;
-                    const isActive = !session.check_out_time;
-                    
-                    // Debug logging
-                    console.log(`${user.alias}:`, {
-                      check_in_time: session.check_in_time,
-                      check_out_time: session.check_out_time,
-                      current_time: now.toISOString(),
-                      start_hour: start,
-                      raw_end_hour: rawEnd,
-                      end_hour: end,
-                      clamped_end: clampedEnd,
-                      isActive,
-                      bar_left: left,
-                      bar_width: width
-                    });
-                    
-                    return (
-                      <div
-                        key={idx}
-                        className={`timeline-bar${isActive ? ' active' : ''}`}
-                        style={{ left: `${left}%`, width: `${width}%` }}
-                        title={`In: ${new Date(session.check_in_time).toLocaleTimeString()}${session.check_out_time ? `\nOut: ${new Date(session.check_out_time).toLocaleTimeString()}` : '\nStill on site'}`}
-                      ></div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

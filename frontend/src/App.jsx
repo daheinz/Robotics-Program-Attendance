@@ -4,6 +4,9 @@ import KioskPage from './pages/KioskPage';
 import StudentDashboard from './pages/StudentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import PresenceBoard from './pages/PresenceBoard';
+import AbsenceManagement from './pages/AbsenceManagement';
+import ReportingPage from './pages/ReportingPage';
+import CoreHoursConfig from './pages/CoreHoursConfig';
 import api, { kioskApi, attendanceApi } from './services/api';
 import './App.css';
 
@@ -122,6 +125,9 @@ function App() {
               />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/presence" element={<PresenceBoard />} />
+              <Route path="/absences" element={<AbsenceManagement />} />
+              <Route path="/reports" element={<ReportingPage />} />
+              <Route path="/core-hours" element={<CoreHoursConfig />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </>
@@ -256,6 +262,22 @@ function MentorCoachDashboard({ userName, userId, userRole, onLogout }) {
             <Link to="/admin" className="nav-card nav-card-large">
               <span className="icon">⚙️</span>
               <span>Admin Dashboard</span>
+            </Link>
+            <Link to="/core-hours" className="nav-card nav-card-large">
+              <span className="icon">⏰</span>
+              <span>Core Hours Configuration</span>
+            </Link>
+            <Link to="/absences" className="nav-card nav-card-large">
+              <span className="icon">📋</span>
+              <span>Absence Management</span>
+            </Link>
+            <Link to="/reports" className="nav-card nav-card-large">
+              <span className="icon">📊</span>
+              <span>Reports & Analytics</span>
+            </Link>
+            <Link to="/presence" className="nav-card nav-card-large">
+              <span className="icon">👥</span>
+              <span>Presence Board</span>
             </Link>
           </div>
         </nav>

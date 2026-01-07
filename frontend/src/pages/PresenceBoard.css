@@ -183,3 +183,44 @@
   color: white;
   font-size: 1.5rem;
 }
+/* Styles for excused absences */
+.timeline-row.excused-absent {
+  opacity: 0.75;
+  background-color: rgba(144, 238, 144, 0.15);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.timeline-label.excused-label {
+  color: #90ee90;
+  font-weight: 600;
+}
+
+.excused-badge {
+  display: inline-block;
+  background-color: #90ee90;
+  color: #2d5016;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-left: 8px;
+}
+
+.excused-bar {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(90deg, #90ee90 0%, #7dd37d 100%);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(144, 238, 144, 0.3);
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2d5016;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
