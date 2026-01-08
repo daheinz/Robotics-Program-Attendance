@@ -11,9 +11,14 @@ function KioskPage({ onAuth }) {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [userStatuses, setUserStatuses] = useState({});
 
   useEffect(() => {
     loadUsers();
+    loadUserStatuses();
+    // Refresh statuses every 30 seconds
+    const interval = setInterval(loadUserStatuses, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadUsers = async () => {
@@ -22,6 +27,30 @@ function KioskPage({ onAuth }) {
       setUsers(response.data);
     } catch (err) {
       setError('Failed to load users');
+    }
+  };
+
+  const loadUserStatuses = async () => {
+    try {
+      const response = await api.get('/attendance/timeline', {
+        params: { 
+          date: new Date().toISOString().split('T')[0],
+          tzOffsetMinutes: new Date().getTimezoneOffset()
+        }
+      });
+      const sessions = response.data || [];
+      const statuses = {};
+      sessions.forEach(session => {
+        if (!session.check_out_time) {
+          statuses[session.user_id] = {
+            status: 'checked-in',
+            checkInTime: session.check_in_time
+          };
+        }
+      });
+      setUserStatuses(statuses);
+    } catch (err) {
+      console.error('Failed to load user statuses:', err);
     }
   };
 
@@ -63,9 +92,18 @@ function KioskPage({ onAuth }) {
     setSearchTerm('');
   };
 
-  const filteredUsers = users.filter(user =>
-    user.alias.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const formatOnsiteDuration = (checkInTime) => {
+    const checkIn = new Date(checkInTime);
+    const now = new Date();
+    const diffMs = now - checkIn;
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
+  };
+
+  const searchLower = searchTerm.toLowerCase();
+  const students = users.filter(u => u.role === 'student' && u.alias.toLowerCase().includes(searchLower));
+  const mentorsCoaches = users.filter(u => (u.role === 'mentor' || u.role === 'coach') && u.alias.toLowerCase().includes(searchLower));
 
   return (
     <div className="kiosk-page">
@@ -88,20 +126,52 @@ function KioskPage({ onAuth }) {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <div className="user-grid">
-            {filteredUsers.map((user) => (
-              <button
-                key={user.id}
-                className={`user-button ${user.role}`}
-                onClick={() => handleUserSelect(user)}
-              >
-                {user.alias}
-                {user.role && (
-                  <span className="role-badge">{user.role}</span>
-                )}
-              </button>
-            ))}
-          </div>
+          {students.length > 0 && (
+            <>
+              <h3 className="user-group-heading">Students</h3>
+              <div className="user-grid">
+                {students.map((user) => {
+                  const userStatus = userStatuses[user.id];
+                  const isCheckedIn = userStatus?.status === 'checked-in';
+                  return (
+                    <button
+                      key={user.id}
+                      className={`user-button student ${isCheckedIn ? 'checked-in' : 'not-checked-in'}`}
+                      onClick={() => handleUserSelect(user)}
+                    >
+                      <div className="user-button-name">{user.alias}</div>
+                      {isCheckedIn && userStatus.checkInTime && (
+                        <div className="user-button-duration">{formatOnsiteDuration(userStatus.checkInTime)}</div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+          {mentorsCoaches.length > 0 && (
+            <>
+              <h3 className="user-group-heading">Mentors & Coaches</h3>
+              <div className="user-grid">
+                {mentorsCoaches.map((user) => {
+                  const userStatus = userStatuses[user.id];
+                  const isCheckedIn = userStatus?.status === 'checked-in';
+                  return (
+                    <button
+                      key={user.id}
+                      className={`user-button mentor-coach ${isCheckedIn ? 'checked-in' : 'not-checked-in'}`}
+                      onClick={() => handleUserSelect(user)}
+                    >
+                      <div className="user-button-name">{user.alias}</div>
+                      {isCheckedIn && userStatus.checkInTime && (
+                        <div className="user-button-duration">{formatOnsiteDuration(userStatus.checkInTime)}</div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       )}
 

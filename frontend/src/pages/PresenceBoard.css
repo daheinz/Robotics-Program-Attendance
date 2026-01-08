@@ -1,16 +1,55 @@
-.bold-label {
-  font-weight: 700 !important;
-  color: #ffe066 !important;
-  letter-spacing: 0.01em;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.12);
+/* Color coding for timeline labels based on check-in status */
+.student-checked-in {
+  color: #48bb78 !important;
+  font-weight: 600;
+}
+
+.mentor-coach-checked-in {
+  color: #4299e1 !important;
+  font-weight: 600;
+}
+
+.not-checked-in {
+  color: #a0aec0 !important;
+  font-weight: 500;
 }
 .timeline-grid {
-  max-width: 1400px;
-  margin: 0 auto;
+  flex: 1;
   background: rgba(255,255,255,0.12);
   border-radius: 12px;
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.timeline-legend {
+  background: rgba(255, 255, 255, 0.95);
+  color: #222;
+  border-radius: 8px;
+  padding: 1rem;
+  min-width: 180px;
+  max-width: 200px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.timeline-legend strong {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.legend-color {
+  width: 18px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
 }
 
 .timeline-header {
@@ -78,6 +117,10 @@
   font-size: 1.1rem;
   padding-right: 0.5rem;
   text-align: right;
+  background: white;
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  margin-right: 0.5rem;
 }
 
 .timeline-bars {
@@ -108,23 +151,47 @@
 .presence-board {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem;
+  padding: 1rem 2rem;
 }
 
 .board-header {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   color: white;
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
 }
 
 .board-header h1 {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
+  font-size: 2.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.kiosk-link {
+  color: #4fd1c5;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.kiosk-link:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .update-time {
-  font-size: 1.1rem;
-  opacity: 0.9;
+  font-size: 1.5rem;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.timeline-container {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
 }
 
 .presence-grid {
@@ -224,4 +291,43 @@
   color: #2d5016;
   font-size: 0.8rem;
   font-weight: bold;
+}
+
+/* Compact timeline overrides: enforce single-line names and tighter rows */
+.timeline-row {
+  min-height: 28px;
+}
+
+.timeline-label.user-label,
+.timeline-label.user-label-header {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-label.user-label {
+  font-size: 0.95rem;
+  padding: 0.25rem 0.5rem;
+  margin-right: 0.35rem;
+}
+
+.timeline-bars {
+  height: 22px;
+}
+
+.timeline-bar {
+  top: 2px;
+  height: 18px;
+}
+
+.timeline-header {
+  margin-bottom: 0.5rem;
+}
+
+.timeline-hour {
+  font-size: 1rem;
+}
+
+.timeline-body {
+  gap: 0.25rem;
 }

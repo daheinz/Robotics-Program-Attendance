@@ -1,0 +1,51 @@
+/* Compressed timeline styles with text truncation */
+
+.timeline-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: relative;
+}
+
+.timeline-row {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+}
+
+.timeline-label.user-label {
+  width: 160px;
+  min-width: 120px;
+  color: #fff;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.3rem 0.6rem;
+  text-align: right;
+  background: white;
+  border-radius: 6px;
+  margin-right: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-bars {
+  position: relative;
+  flex: 1 1 0;
+  height: 22px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.timeline-bar {
+  position: absolute;
+  top: 3px;
+  height: 16px;
+  background: #4fd1c5;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: background 0.2s;
+  opacity: 0.85;
+  z-index: 2;
+}

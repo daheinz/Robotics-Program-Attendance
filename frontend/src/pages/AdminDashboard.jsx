@@ -657,10 +657,24 @@ function AttendanceTab() {
   const loadUsers = async () => {
     try {
       const res = await userApi.getAll();
-      setUsers(res.data.filter(u => u.role === 'student' || u.role === 'mentor'));
+      setUsers(res.data.filter(u => u.role === 'student' || u.role === 'mentor' || u.role === 'coach'));
     } catch (err) {
       setError('Failed to load users');
     }
+  };
+
+  // Format timestamp for datetime-local input (no timezone conversion)
+  const formatForInput = (timestamp) => {
+    if (!timestamp) return '';
+    // Just take first 16 chars: "YYYY-MM-DDTHH:mm"
+    return timestamp.replace(' ', 'T').slice(0, 16);
+  };
+
+  // Convert datetime-local input to ISO format for backend
+  const formatForBackend = (localString) => {
+    if (!localString) return '';
+    // Add seconds: "YYYY-MM-DDTHH:mm:ss"
+    return localString + ':00';
   };
 
   const computeRange = () => {
@@ -718,8 +732,8 @@ function AttendanceTab() {
   const startEdit = (session) => {
     setEditSessionId(session.id);
     setEditForm({
-      checkInTime: session.check_in_time ? session.check_in_time.slice(0, 16) : '',
-      checkOutTime: session.check_out_time ? session.check_out_time.slice(0, 16) : '',
+      checkInTime: formatForInput(session.check_in_time),
+      checkOutTime: formatForInput(session.check_out_time),
       reflectionText: session.reflection_text || '',
       auditReason: '',
     });
@@ -743,8 +757,8 @@ function AttendanceTab() {
     }
     try {
       await attendanceApi.adminUpdate(editSessionId, {
-        checkInTime: new Date(editForm.checkInTime).toISOString(),
-        checkOutTime: new Date(editForm.checkOutTime).toISOString(),
+        checkInTime: formatForBackend(editForm.checkInTime),
+        checkOutTime: formatForBackend(editForm.checkOutTime),
         reflectionText: editForm.reflectionText,
         auditReason: editForm.auditReason,
       });
@@ -780,8 +794,8 @@ function AttendanceTab() {
     try {
       await attendanceApi.adminCreate({
         userId: createForm.userId,
-        checkInTime: new Date(createForm.checkInTime).toISOString(),
-        checkOutTime: new Date(createForm.checkOutTime).toISOString(),
+        checkInTime: formatForBackend(createForm.checkInTime),
+        checkOutTime: formatForBackend(createForm.checkOutTime),
         reflectionText: createForm.reflectionText,
         auditReason: createForm.auditReason,
       });
@@ -875,7 +889,11 @@ function AttendanceTab() {
     }
   };
 
-  const formatDateTime = (dt) => dt ? new Date(dt).toLocaleString() : '';
+  const formatDateTime = (dt) => {
+    if (!dt) return '';
+    // Backend returns timestamps in local time format: "2026-01-08 14:00:00" or "2026-01-08T14:00:00"
+    return new Date(dt.replace(' ', 'T')).toLocaleString();
+  };
 
   return (
     <div className="tab-content attendance-tab">

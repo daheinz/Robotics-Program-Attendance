@@ -48,21 +48,35 @@
 
 .user-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 0.5rem;
 }
 
 .user-button {
   position: relative;
-  padding: 1rem 0.5rem;
+  padding: 0.5rem 0.5rem;
   background: white;
   border: none;
   border-radius: 10px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.user-button-name {
+  margin-bottom: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-button-duration {
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 0.15rem;
+  opacity: 0.9;
 }
 
 .user-button:hover {
@@ -70,25 +84,44 @@
   box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Role-specific accents */
-.user-button.student {
-  border-left: 6px solid #38b2ac; /* teal */
-}
-.user-button.mentor {
-  border-left: 6px solid #ed8936; /* orange */
-}
-.user-button.coach {
-  border-left: 6px solid #48bb78; /* green */
+/* Group heading styling */
+.user-group-heading {
+  color: white;
+  font-size: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  text-align: left;
+  font-weight: 700;
 }
 
-.user-button.student .role-badge {
-  color: #319795;
+.user-group-heading:first-child {
+  margin-top: 0;
 }
-.user-button.mentor .role-badge {
-  color: #dd6b20;
+
+/* Students: Green when checked in, Grey when not */
+.user-button.student.checked-in {
+  background: #48bb78;
+  color: white;
+  border: 3px solid #2f855a;
 }
-.user-button.coach .role-badge {
-  color: #2f855a;
+
+.user-button.student.not-checked-in {
+  background: #edf2f7; /* light gray */
+  color: #1a202c; /* dark readable text */
+  border: 3px solid #cbd5e0; /* medium gray border */
+}
+
+/* Mentors & Coaches: Blue when checked in, Grey when not */
+.user-button.mentor-coach.checked-in {
+  background: #4299e1;
+  color: white;
+  border: 3px solid #2b6cb0;
+}
+
+.user-button.mentor-coach.not-checked-in {
+  background: #edf2f7; /* light gray */
+  color: #1a202c; /* dark readable text */
+  border: 3px solid #cbd5e0; /* medium gray border */
 }
 
 .role-badge {

@@ -195,27 +195,17 @@ function PresenceBoard() {
 
   return (
     <div className="presence-board">
-      <header className="board-header" style={{ position: 'relative' }}>
-        <h1>Presence Timeline</h1>
-        <a href="/kiosk" className="kiosk-link" style={{ color: '#4fd1c5', fontWeight: 'bold', fontSize: '1.1rem', marginLeft: '1.5rem', textDecoration: 'underline' }}>
+      <header className="board-header">
+        <h1>Presence Timeline <span className="update-time">(Last updated: {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })})</span></h1>
+        <a href="/kiosk" className="kiosk-link">
           Return to Kiosk
         </a>
-        <div className="timeline-guide" style={{ position: 'absolute', top: 0, right: 0, background: 'rgba(255,255,255,0.95)', color: '#222', borderRadius: 8, padding: '0.7em 1.2em', fontSize: '0.95rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', maxWidth: '400px' }}>
-          <strong>Legend:</strong><br />
-          <span style={{ display: 'inline-block', width: 18, height: 10, background: '#4fd1c5', borderRadius: 3, marginRight: 6, verticalAlign: 'middle' }}></span> Past presence<br />
-          <span style={{ display: 'inline-block', width: 18, height: 10, background: '#f6e05e', borderRadius: 3, marginRight: 6, verticalAlign: 'middle' }}></span> Still on site<br />
-          <span style={{ display: 'inline-block', width: 18, height: 10, background: '#90ee90', borderRadius: 3, marginRight: 6, verticalAlign: 'middle' }}></span> Excused Absence<br />
-          <span style={{ display: 'inline-block', width: 18, height: 10, background: 'rgba(100, 150, 255, 0.15)', border: '1px solid rgba(100, 150, 255, 0.3)', borderRadius: 3, marginRight: 6, verticalAlign: 'middle' }}></span> Required Practice Time<br />
-          <span style={{ display: 'inline-block', width: 3, height: 10, background: '#ff6b6b', borderRadius: 2, marginRight: 6, verticalAlign: 'middle' }}></span> Current time
-        </div>
-        <p className="update-time">
-          Last updated: {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
-        </p>
       </header>
 
       {error && <div className="error-message">{error}</div>}
 
-      <div className="timeline-grid">
+      <div className="timeline-container">
+        <div className="timeline-grid">
         <div className="timeline-header" style={{ position: 'relative' }}>
           <div className="timeline-label user-label-header"></div>
           <div style={{ position: 'relative', flex: '1 1 0', display: 'flex' }}>
@@ -311,18 +301,13 @@ function PresenceBoard() {
           })()}
           
           {/* Group A: Coaches / Mentors (present only) */}
-          {groupA.length > 0 && (
-            <div className="timeline-row" style={{ marginTop: '0.5rem' }}>
-              <div className="timeline-label user-label" style={{ fontWeight: 700 }}>Coaches / Mentors</div>
-              <div className="timeline-bars" />
-            </div>
-          )}
           {groupA.map(([userId, user]) => {
             const absence = absences[userId];
             const isExcusedAbsent = absence && absence.status === 'approved';
+            const hasSession = user.sessions.length > 0;
             return (
               <div className={`timeline-row${isExcusedAbsent ? ' excused-absent' : ''}`} key={`A-${userId}`}>
-                <div className={`timeline-label user-label bold-label${isExcusedAbsent ? ' excused-label' : ''}`}>
+                <div className={`timeline-label user-label ${hasSession ? 'mentor-coach-checked-in' : 'not-checked-in'}${isExcusedAbsent ? ' excused-label' : ''}`}>
                   {user.alias} {user.role === 'mentor' ? '(Mentor)' : user.role === 'coach' ? '(Coach)' : ''}
                   {isExcusedAbsent && <span className="excused-badge">Excused Absence</span>}
                 </div>
@@ -344,18 +329,13 @@ function PresenceBoard() {
           })}
 
           {/* Group B: Students with sessions today */}
-          {groupB.length > 0 && (
-            <div className="timeline-row" style={{ marginTop: '1rem' }}>
-              <div className="timeline-label user-label" style={{ fontWeight: 700 }}>Students (Sessions Today)</div>
-              <div className="timeline-bars" />
-            </div>
-          )}
           {groupB.map(([userId, user]) => {
             const absence = absences[userId];
             const isExcusedAbsent = absence && absence.status === 'approved';
+            const hasSession = user.sessions.length > 0;
             return (
               <div className={`timeline-row${isExcusedAbsent ? ' excused-absent' : ''}`} key={`B-${userId}`}>
-                <div className={`timeline-label user-label${isExcusedAbsent ? ' excused-label' : ''}`}>
+                <div className={`timeline-label user-label ${hasSession ? 'student-checked-in' : 'not-checked-in'}${isExcusedAbsent ? ' excused-label' : ''}`}>
                   {user.alias}
                   {isExcusedAbsent && <span className="excused-badge">Excused Absence</span>}
                 </div>
@@ -377,18 +357,12 @@ function PresenceBoard() {
           })}
 
           {/* Group C: Students with excused absences */}
-          {groupC.length > 0 && (
-            <div className="timeline-row" style={{ marginTop: '1rem' }}>
-              <div className="timeline-label user-label" style={{ fontWeight: 700 }}>Students (Excused Absences)</div>
-              <div className="timeline-bars" />
-            </div>
-          )}
           {groupC.map(([userId, user]) => {
             const absence = absences[userId];
             const isExcusedAbsent = true;
             return (
               <div className={`timeline-row excused-absent`} key={`C-${userId}`}>
-                <div className={`timeline-label user-label excused-label`}>
+                <div className={`timeline-label user-label not-checked-in excused-label`}>
                   {user.alias}
                   <span className="excused-badge">Excused Absence</span>
                 </div>
@@ -400,18 +374,12 @@ function PresenceBoard() {
           })}
 
           {/* Group D: Students with unexcused absences or no absences, and no sessions */}
-          {groupD.length > 0 && (
-            <div className="timeline-row" style={{ marginTop: '1rem' }}>
-              <div className="timeline-label user-label" style={{ fontWeight: 700 }}>Students (Unexcused / No Absence)</div>
-              <div className="timeline-bars" />
-            </div>
-          )}
           {groupD.map(([userId, user]) => {
             const absence = absences[userId];
             const isUnexcused = !!absence && absence.status !== 'approved';
             return (
               <div className={`timeline-row`} key={`D-${userId}`}>
-                <div className={`timeline-label user-label`}>
+                <div className={`timeline-label user-label not-checked-in`}>
                   {user.alias}
                   {isUnexcused && <span className="excused-badge" style={{ background: '#f6ad55', color: '#222' }}>Unexcused Absence</span>}
                 </div>
@@ -421,6 +389,31 @@ function PresenceBoard() {
               </div>
             );
           })}
+        </div>
+      </div>
+
+        <div className="timeline-legend">
+          <strong>Legend</strong>
+          <div className="legend-item">
+            <span className="legend-color" style={{ background: '#4fd1c5' }}></span>
+            <span>Past presence</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ background: '#f6e05e' }}></span>
+            <span>Still on site</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ background: '#90ee90' }}></span>
+            <span>Excused Absence</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ background: 'rgba(100, 150, 255, 0.3)', border: '1px solid rgba(100, 150, 255, 0.5)' }}></span>
+            <span>Required Practice</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ background: '#ff6b6b', width: '3px' }}></span>
+            <span>Current time</span>
+          </div>
         </div>
       </div>
     </div>
