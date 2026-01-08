@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import './AbsenceManagement.css';
 import api from '../services/api';
 
@@ -85,6 +86,14 @@ export default function AbsenceManagement() {
     }));
   };
 
+  const refreshCurrentFilter = () => {
+    if (filter === 'unapproved') {
+      fetchUnapprovedAbsences();
+    } else if (filter === 'future') {
+      fetchFutureAbsences();
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -116,7 +125,7 @@ export default function AbsenceManagement() {
       });
       setEditingId(null);
       setShowForm(false);
-      fetchUnapprovedAbsences();
+      refreshCurrentFilter();
     } catch (error) {
       console.error('Error saving absence:', error);
       alert('Failed to save absence: ' + error.response?.data?.error);
@@ -126,15 +135,61 @@ export default function AbsenceManagement() {
   };
 
   const handleEdit = (absence) => {
+    const dateValue = absence.absence_date
+      ? absence.absence_date.split('T')[0]
+      : '';
+
     setFormData({
       studentId: absence.student_id,
-      absenceDate: absence.absence_date,
+      absenceDate: dateValue,
       dayOfWeek: absence.day_of_week,
       status: absence.status,
-      notes: absence.notes,
+      notes: absence.notes || '',
     });
     setEditingId(absence.id);
     setShowForm(true);
+  };
+
+  const parseDate = (dateString) => {
+    if (!dateString) return new Date();
+    // Handle both 'YYYY-MM-DD' and ISO formats
+    if (dateString.includes('T')) {
+      return new Date(dateString);
+    } else {
+      // Parse YYYY-MM-DD as local date to avoid timezone issues
+      const [year, month, day] = dateString.split('-');
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
+  };
+
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '';
+    const date = parseDate(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const handleDelete = async (absenceId) => {
+    if (!window.confirm('Are you sure you want to delete this absence record?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await api.delete(`/absences/${absenceId}`);
+      alert('Absence deleted successfully');
+      refreshCurrentFilter();
+    } catch (error) {
+      console.error('Error deleting absence:', error);
+      alert('Failed to delete absence: ' + (error.response?.data?.error || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleApprove = async (absenceId) => {
@@ -148,7 +203,7 @@ export default function AbsenceManagement() {
       });
 
       alert('Absence approved');
-      fetchUnapprovedAbsences();
+      refreshCurrentFilter();
     } catch (error) {
       console.error('Error approving absence:', error);
       alert('Failed to approve absence');
@@ -160,16 +215,26 @@ export default function AbsenceManagement() {
   const handleViewAuditLog = async (absenceId) => {
     try {
       const response = await api.get(`/absences/${absenceId}/audit-log`);
-      const logs = response.data.logs;
+      const logs = response.data.logs || [];
       
+      if (logs.length === 0) {
+        alert('Audit Log:\n\nNo audit entries yet.');
+        return;
+      }
+
       let logText = 'Audit Log:\n\n';
       logs.forEach(log => {
         logText += `[${new Date(log.created_at).toLocaleString()}] ${log.action.toUpperCase()} by ${log.user_alias}\n`;
         if (log.changes) {
-          const changes = JSON.parse(log.changes);
-          Object.keys(changes).forEach(key => {
-            logText += `  ${key}: ${JSON.stringify(changes[key])}\n`;
-          });
+          try {
+            const changes = typeof log.changes === 'string' ? JSON.parse(log.changes) : log.changes;
+            Object.keys(changes || {}).forEach(key => {
+              logText += `  ${key}: ${JSON.stringify(changes[key])}\n`;
+            });
+          } catch (parseErr) {
+            console.error('Failed to parse audit log changes', parseErr, log.changes);
+            logText += '  (changes could not be displayed)\n';
+          }
         }
       });
       
@@ -187,7 +252,12 @@ export default function AbsenceManagement() {
 
   return (
     <div className="absence-management">
-      <h1>Absence Management</h1>
+      <div className="header-row">
+        <h1>Absence Management</h1>
+        <Link to="/" className="btn btn-secondary">
+          ← Back to Home
+        </Link>
+      </div>
       
       <div className="controls">
         <div className="filter-buttons">
@@ -315,7 +385,7 @@ export default function AbsenceManagement() {
               {absences.map(absence => (
                 <tr key={absence.id} className={`status-${absence.status}`}>
                   <td>{absence.student_alias} - {absence.first_name} {absence.last_name}</td>
-                  <td>{absence.absence_date}</td>
+                  <td>{formatDateForDisplay(absence.absence_date)}</td>
                   <td>{dayOfWeekName(absence.day_of_week)}</td>
                   <td className={`status-badge status-${absence.status}`}>
                     {absence.status === 'approved' ? 'APPROVED' : 'UNAPPROVED'}
@@ -324,27 +394,41 @@ export default function AbsenceManagement() {
                   <td className="actions">
                     {absence.status === 'unapproved' && (
                       <>
-                        <button 
+                        <button
                           className="btn-small btn-approve"
                           onClick={() => handleApprove(absence.id)}
                         >
                           Approve
                         </button>
-                        <button 
+                        <button
                           className="btn-small btn-edit"
                           onClick={() => handleEdit(absence)}
                         >
                           Edit
                         </button>
+                        <button
+                          className="btn-small btn-delete"
+                          onClick={() => handleDelete(absence.id)}
+                        >
+                          Delete
+                        </button>
                       </>
                     )}
                     {absence.status === 'approved' && (
-                      <button 
-                        className="btn-small btn-edit"
-                        onClick={() => handleEdit(absence)}
-                      >
-                        Edit
-                      </button>
+                      <>
+                        <button
+                          className="btn-small btn-edit"
+                          onClick={() => handleEdit(absence)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn-small btn-delete"
+                          onClick={() => handleDelete(absence.id)}
+                        >
+                          Delete
+                        </button>
+                      </>
                     )}
                     <button 
                       className="btn-small btn-log"

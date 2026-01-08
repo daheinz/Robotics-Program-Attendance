@@ -58,8 +58,8 @@ router.patch('/:id', requireMentorOrCoach, validateUserId, validateUpdateUser, h
 // PATCH /users/:id/alias - Update user alias
 router.patch('/:id/alias', requireMentorOrCoach, validateUserId, validateUpdateAlias, handleValidationErrors, UserController.updateAlias);
 
-// PATCH /users/:id/pin - Update user PIN (coach only)
-router.patch('/:id/pin', requireCoach, validateUserId, validateUpdatePin, handleValidationErrors, UserController.updatePin);
+// PATCH /users/:id/pin - Update user PIN (coach or mentor)
+router.patch('/:id/pin', requireMentorOrCoach, validateUserId, validateUpdatePin, handleValidationErrors, UserController.updatePin);
 
 // DELETE /users/:id - Soft delete user
 router.delete('/:id', requireCoach, validateUserId, handleValidationErrors, UserController.delete);

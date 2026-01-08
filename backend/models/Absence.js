@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 class Absence {
   // Create a new absence record
-  static async create({ studentId, absenceDate, dayOfWeek, status = 'unapproved', notes = '', approvedBy = null, seasonType = 'build' }) {
+  static async create({ studentId, absenceDate, dayOfWeek, status = 'unapproved', notes = '', approvedBy = null, seasonType = 'build', createdBy }) {
     const id = uuidv4();
     
     const query = `
@@ -14,13 +14,40 @@ class Absence {
     
     const values = [id, studentId, absenceDate, dayOfWeek, status, notes, approvedBy, seasonType];
     const result = await db.query(query, values);
-    
-    // Create audit log entry
-    if (approvedBy) {
-      await this.createAuditLog(id, 'created', approvedBy, { status, notes });
+
+    // Always create an audit log for creation
+    if (createdBy) {
+      await this.createAuditLog(id, 'created', createdBy, {
+        studentId,
+        absenceDate,
+        dayOfWeek,
+        status,
+        notes,
+        approvedBy,
+        seasonType
+      });
     }
-    
+
     return result.rows[0];
+  }
+
+  // Get a minimal summary of absences for a specific date (public-safe)
+  // Returns rows of { student_id, status }
+  static async findByDateSummary(absenceDate, seasonType = null) {
+    let query = `
+      SELECT 
+        a.student_id,
+        a.status
+      FROM absences a
+      WHERE a.absence_date = $1
+    `;
+    const values = [absenceDate];
+    if (seasonType) {
+      query += ' AND a.season_type = $2';
+      values.push(seasonType);
+    }
+    const result = await db.query(query, values);
+    return result.rows;
   }
 
   // Get absence by ID
@@ -210,6 +237,25 @@ class Absence {
     
     const result = await db.query(query, [startDate, endDate]);
     return result.rows;
+  }
+
+  // Delete an absence record
+  static async delete(id, deletedBy) {
+    // Get current record for audit log
+    const absence = await this.findById(id);
+    if (!absence) {
+      throw new Error('Absence not found');
+    }
+
+    // Delete from absence_logs first (foreign key constraint)
+    const deleteLogsQuery = 'DELETE FROM absence_logs WHERE absence_id = $1';
+    await db.query(deleteLogsQuery, [id]);
+
+    // Delete the absence
+    const query = 'DELETE FROM absences WHERE id = $1';
+    await db.query(query, [id]);
+
+    return true;
   }
 }
 

@@ -42,12 +42,22 @@ export const attendanceApi = {
   adminUpdate: (sessionId, data) => api.patch(`/attendance/${sessionId}/admin`, data),
   adminDelete: (sessionId, auditReason) => api.delete(`/attendance/${sessionId}`, { data: { auditReason } }),
   getTimeline: (date) => api.get('/attendance/timeline', { params: { date } }),
+  // Pass client timezone offset to ensure correct local-day window on server
+  getTimelineWithTz: (date) => 
+    api.get('/attendance/timeline', { 
+      params: { date, tzOffsetMinutes: new Date().getTimezoneOffset() }
+    }),
   getByDay: (date) => api.get('/attendance/day', { params: { date } }),
   getByUser: (userId) => api.get(`/attendance/user/${userId}`),
+  getUserStatus: (userId) => api.get(`/attendance/user/${userId}/status`),
   getCurrentStatus: () => api.get('/attendance/me'),
   correctSession: (sessionId, updates) => 
     api.patch(`/attendance/${sessionId}`, updates),
   createManual: (data) => api.post('/attendance', data),
+  quickCheckIn: (userId, checkInTime) => 
+    api.post(`/attendance/user/${userId}/quick-checkin`, { checkInTime }),
+  quickCheckOut: (userId, checkOutTime) => 
+    api.post(`/attendance/user/${userId}/quick-checkout`, { checkOutTime }),
   export: (startDate, endDate) => 
     api.get('/attendance/export', { 
       params: { start_date: startDate, end_date: endDate },
@@ -76,8 +86,9 @@ export const reflectionApi = {
 // Settings endpoints
 export const settingsApi = {
   get: () => api.get('/settings'),
-  update: (reflectionPrompt) => 
-    api.patch('/settings', { reflectionPrompt }),
+  getPublic: () => api.get('/settings/public'),
+  update: (payload) => 
+    api.patch('/settings', payload),
 };
 
 export default api;

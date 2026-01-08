@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import KioskPage from './pages/KioskPage';
 import StudentDashboard from './pages/StudentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -10,11 +10,12 @@ import CoreHoursConfig from './pages/CoreHoursConfig';
 import api, { kioskApi, attendanceApi } from './services/api';
 import './App.css';
 
-function App() {
+function AppContent() {
   const [authenticated, setAuthenticated] = useState(!!localStorage.getItem('token'));
   const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
   const [userName, setUserName] = useState(localStorage.getItem('userName'));
   const [userId, setUserId] = useState(localStorage.getItem('userId'));
+  const navigate = useNavigate();
 
   // Inactivity timeout - log out after 5 minutes of inactivity
   useEffect(() => {
@@ -75,6 +76,9 @@ function App() {
 
     // Setup API interceptor
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+    // Navigate to home page
+    navigate('/');
   };
 
   // Setup API interceptor on mount
@@ -86,14 +90,13 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <div className="app">
-        <Routes>
-          {/* Public route - no authentication required */}
-          <Route path="/presenceboard" element={<PresenceBoard />} />
-        </Routes>
-        
-        {!authenticated ? (
+    <div className="app">
+      <Routes>
+        {/* Public route - no authentication required */}
+        <Route path="/presenceboard" element={<PresenceBoard />} />
+      </Routes>
+      
+      {!authenticated ? (
           // Kiosk Mode - Entry Point
           <KioskPage onAuth={handleKioskAuth} />
         ) : (
@@ -133,7 +136,6 @@ function App() {
           </>
         )}
       </div>
-    </Router>
   );
 }
 
@@ -283,6 +285,14 @@ function MentorCoachDashboard({ userName, userId, userRole, onLogout }) {
         </nav>
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 

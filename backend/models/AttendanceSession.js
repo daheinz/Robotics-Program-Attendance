@@ -125,6 +125,23 @@ class AttendanceSession {
     return result.rows;
   }
 
+  // Sessions that intersect a UTC time window [startUtc, endUtc)
+  static async getSessionsByUtcRange(startUtc, endUtc) {
+    const query = `
+      SELECT 
+        a.*,
+        u.alias,
+        u.role
+      FROM attendance_sessions a
+      INNER JOIN users u ON a.user_id = u.id
+      WHERE a.check_in_time < $2
+        AND (a.check_out_time IS NULL OR a.check_out_time >= $1)
+      ORDER BY a.check_in_time ASC
+    `;
+    const result = await db.query(query, [startUtc, endUtc]);
+    return result.rows;
+  }
+
   static async getSessionsByUser(userId) {
     const query = `
       SELECT * FROM attendance_sessions 

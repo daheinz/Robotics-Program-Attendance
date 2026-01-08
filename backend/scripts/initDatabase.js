@@ -69,6 +69,9 @@ async function initDatabase() {
       CREATE TABLE IF NOT EXISTS system_settings (
         id UUID PRIMARY KEY,
         reflection_prompt TEXT NOT NULL,
+        presence_start_hour INT NOT NULL DEFAULT 8 CHECK (presence_start_hour >= 0 AND presence_start_hour <= 23),
+        presence_end_hour INT NOT NULL DEFAULT 24 CHECK (presence_end_hour > 0 AND presence_end_hour <= 24),
+        CHECK (presence_start_hour < presence_end_hour),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -107,9 +110,9 @@ async function initDatabase() {
     if (parseInt(settingsCheck.rows[0].count) === 0) {
       const { v4: uuidv4 } = require('uuid');
       await client.query(`
-        INSERT INTO system_settings (id, reflection_prompt)
-        VALUES ($1, $2)
-      `, [uuidv4(), 'Please reflect on what you learned or accomplished today.']);
+        INSERT INTO system_settings (id, reflection_prompt, presence_start_hour, presence_end_hour)
+        VALUES ($1, $2, $3, $4)
+      `, [uuidv4(), 'Please reflect on what you learned or accomplished today.', 8, 24]);
       console.log('✓ Inserted default system settings');
     }
 

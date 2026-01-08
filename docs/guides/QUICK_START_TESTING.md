@@ -109,8 +109,9 @@ Expected: See list of all future scheduled absences
    - Students with approved absences today show in green
    - Students with active check-ins show yellow bar
    - Students who checked out show teal bar
+3. (Optional) Adjust timeline window: Admin Dashboard → Settings → Presence Timeline Start/End, then refresh Presence Board to see the new range
 
-Expected: Students appear on timeline with appropriate colors
+Expected: Students appear on timeline with appropriate colors and the timeline reflects the configured start/end hours (defaults 8–24)
 
 ## Step 10: Test Multiple Absences
 1. Record absence for same student on different date
@@ -158,6 +159,7 @@ Expected: All absences appear with correct student names and statuses
 - [ ] Can download audit report
 - [ ] Can view future absences
 - [ ] Presence board shows excused absences in green
+- [ ] Presence board uses configured start/end hours (defaults 8–24)
 - [ ] All API endpoints respond correctly
 
 ## If Something Doesn't Work

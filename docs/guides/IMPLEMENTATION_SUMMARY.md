@@ -69,6 +69,7 @@ Four new React pages with professional styling:
 - "Excused Absence" badge display
 - Updated legend
 - Real-time sync with absence data
+- Configurable start/end hours via System Settings (defaults 8–24)
 
 ---
 
@@ -129,7 +130,8 @@ backend/routes/
 └── reports.js                      # Report endpoints
 
 backend/scripts/
-└── createAbsenceTables.js          # Database migration script
+├── createAbsenceTables.js          # Database migration script
+└── addPresenceHours.js             # Adds configurable presence window to system_settings
 ```
 
 ### Backend Files Modified

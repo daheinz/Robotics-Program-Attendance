@@ -13,25 +13,45 @@ class SettingsController {
     }
   }
 
+  // GET /settings/public - Get limited system settings without auth (read-only)
+  static async getPublic(req, res) {
+    try {
+      const settings = await SystemSettings.get();
+      res.json({
+        presence_start_hour: settings.presence_start_hour,
+        presence_end_hour: settings.presence_end_hour,
+      });
+    } catch (error) {
+      console.error('Error fetching public settings:', error);
+      res.status(500).json({ error: 'Failed to fetch settings' });
+    }
+  }
+
   // PATCH /settings - Update system settings
   static async update(req, res) {
     try {
-      const { reflectionPrompt } = req.body;
+      const { reflectionPrompt, presenceStartHour, presenceEndHour } = req.body;
 
-      if (!reflectionPrompt) {
-        return res.status(400).json({ 
-          error: 'reflectionPrompt is required' 
-        });
+      // Validate window with current values to provide clearer error messages
+      const current = await SystemSettings.get();
+      const nextStart = presenceStartHour ?? current.presence_start_hour;
+      const nextEnd = presenceEndHour ?? current.presence_end_hour;
+      if (nextStart >= nextEnd) {
+        return res.status(400).json({ error: 'presenceStartHour must be less than presenceEndHour' });
       }
 
-      const settings = await SystemSettings.update(reflectionPrompt);
+      const settings = await SystemSettings.update({
+        reflectionPrompt,
+        presenceStartHour,
+        presenceEndHour,
+      });
 
       // Log the action
       if (req.user) {
         await AuditLog.create({
           actorUserId: req.user.id,
           actionType: 'UPDATE_SETTINGS',
-          details: { reflectionPrompt },
+          details: { reflectionPrompt, presenceStartHour, presenceEndHour },
         });
       }
 

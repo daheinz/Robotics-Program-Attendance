@@ -19,13 +19,22 @@ class AttendanceController {
   // GET /attendance/timeline?date=YYYY-MM-DD - Get timeline data (no auth required)
   static async getTimeline(req, res) {
     try {
-      const { date } = req.query;
+      const { date, tzOffsetMinutes } = req.query;
       
       if (!date) {
         return res.status(400).json({ error: 'Date parameter is required' });
       }
-      
-      const sessions = await AttendanceSession.getSessionsByDate(date);
+      // Compute UTC window for the provided local date using client offset
+      // tzOffsetMinutes: minutes to add to local to get UTC (JS getTimezoneOffset)
+      const offset = Number(tzOffsetMinutes ?? 0);
+      const startUtc = new Date(`${date}T00:00:00.000Z`);
+      startUtc.setMinutes(startUtc.getMinutes() + offset);
+      const endUtc = new Date(startUtc.getTime() + 24 * 60 * 60 * 1000);
+
+      const sessions = await AttendanceSession.getSessionsByUtcRange(
+        startUtc.toISOString(),
+        endUtc.toISOString()
+      );
       
       // Return only non-sensitive data for timeline display
       const timelineData = sessions.map(s => ({
@@ -249,11 +258,8 @@ class AttendanceController {
         return res.status(400).json({ error: 'No active check-in session found' });
       }
 
-      // Check out the session
-      const checkOutTime = new Date().toISOString();
-      const updatedSession = await AttendanceSession.update(session.id, {
-        checkOutTime,
-      });
+      // Check out the session using DB CURRENT_TIMESTAMP for consistency
+      const updatedSession = await AttendanceSession.checkout(session.id);
 
       // Create reflection if provided
       if (reflectionText) {
@@ -426,6 +432,113 @@ class AttendanceController {
     } catch (error) {
       console.error('Error deleting attendance:', error);
       res.status(500).json({ error: 'Failed to delete attendance' });
+    }
+  }
+
+  // POST /attendance/user/:userId/quick-checkin - Quick check-in for today (coach/mentor initiated)
+  static async quickCheckIn(req, res) {
+    try {
+      const { userId } = req.params;
+      const { checkInTime } = req.body;
+
+      if (!checkInTime) {
+        return res.status(400).json({ error: 'checkInTime is required' });
+      }
+
+      const checkIn = new Date(checkInTime);
+      const now = new Date();
+      if (checkIn > now) {
+        return res.status(400).json({ error: 'Cannot enter a future time' });
+      }
+
+      // Check if user already has an active session
+      const activeSession = await AttendanceSession.findActiveSession(userId);
+      if (activeSession) {
+        return res.status(400).json({ error: 'User already has an active session' });
+      }
+
+      // Create new session with just check-in time (no checkout)
+      const session = await AttendanceSession.create(userId);
+      const updatedSession = await AttendanceSession.update(session.id, { checkInTime });
+
+      // Audit log
+      if (req.user) {
+        await AuditLog.create({
+          actorUserId: req.user.id,
+          actionType: 'QUICK_CHECK_IN',
+          targetUserId: userId,
+          details: { sessionId: session.id, checkInTime },
+        });
+      }
+
+      res.status(201).json({
+        message: 'User checked in successfully',
+        session: updatedSession,
+      });
+    } catch (error) {
+      console.error('Error during quick check-in:', error);
+      res.status(500).json({ error: 'Failed to check in user' });
+    }
+  }
+
+  // GET /attendance/user/:userId/status - Get user's current session status
+  static async getUserStatus(req, res) {
+    try {
+      const { userId } = req.params;
+
+      const session = await AttendanceSession.findActiveSession(userId);
+      res.json({
+        checkedIn: !!session,
+        session: session || null,
+      });
+    } catch (error) {
+      console.error('Error getting user status:', error);
+      res.status(500).json({ error: 'Failed to get user status' });
+    }
+  }
+
+  // POST /attendance/user/:userId/quick-checkout - Quick check-out for today (coach/mentor initiated)
+  static async quickCheckOut(req, res) {
+    try {
+      const { userId } = req.params;
+      const { checkOutTime } = req.body;
+
+      if (!checkOutTime) {
+        return res.status(400).json({ error: 'checkOutTime is required' });
+      }
+
+      const checkOut = new Date(checkOutTime);
+      const now = new Date();
+      if (checkOut > now) {
+        return res.status(400).json({ error: 'Cannot enter a future time' });
+      }
+
+      // Find active session for this user
+      const session = await AttendanceSession.findActiveSession(userId);
+      if (!session) {
+        return res.status(400).json({ error: 'No active session found for this user' });
+      }
+
+      // Update session with checkout time
+      const updatedSession = await AttendanceSession.update(session.id, { checkOutTime });
+
+      // Audit log
+      if (req.user) {
+        await AuditLog.create({
+          actorUserId: req.user.id,
+          actionType: 'QUICK_CHECK_OUT',
+          targetUserId: userId,
+          details: { sessionId: session.id, checkOutTime },
+        });
+      }
+
+      res.json({
+        message: 'User checked out successfully',
+        session: updatedSession,
+      });
+    } catch (error) {
+      console.error('Error during quick check-out:', error);
+      res.status(500).json({ error: 'Failed to check out user' });
     }
   }
 }

@@ -4,6 +4,37 @@
   margin: 0 auto;
 }
 
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.header-row h1 {
+  margin: 0;
+  color: #333;
+  flex: 1;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
 .absence-management h1 {
   margin-bottom: 20px;
   color: #333;
@@ -234,6 +265,16 @@
 
 .btn-edit:hover {
   background-color: #b8daff;
+}
+
+.btn-delete {
+  background-color: #f8d7da;
+  border-color: #dc3545;
+  color: #721c24;
+}
+
+.btn-delete:hover {
+  background-color: #f5c6cb;
 }
 
 .btn-log {

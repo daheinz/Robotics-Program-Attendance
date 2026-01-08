@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './ReportingPage.css';
 import api from '../services/api';
 
@@ -90,7 +91,12 @@ export default function ReportingPage() {
 
   return (
     <div className="reporting-page">
-      <h1>Absence Reporting</h1>
+      <div className="header-row">
+        <h1>Absence Reporting</h1>
+        <Link to="/" className="btn btn-secondary">
+          ← Back to Home
+        </Link>
+      </div>
 
       <div className="report-controls">
         <div className="filter-section">

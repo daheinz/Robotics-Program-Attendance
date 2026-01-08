@@ -1,11 +1,15 @@
 const express = require('express');
 const absenceController = require('../controllers/absenceController');
-const auth = require('../middleware/auth');
+const { requireMentorOrCoach } = require('../middleware/auth');
 
 const router = express.Router();
 
-// All routes require authentication and mentor/coach role
-router.use(auth);
+// Public minimal-read endpoint for presence board: absences by date
+// GET /api/absences/public/by-date?date=YYYY-MM-DD&seasonType=build
+router.get('/public/by-date', absenceController.getAbsencesForDatePublic);
+
+// Remaining routes require authentication and mentor/coach role
+router.use(requireMentorOrCoach);
 
 // POST /api/absences - Create new absence record
 router.post('/', absenceController.createAbsence);
@@ -30,5 +34,8 @@ router.get('/student/:studentId/:absenceDate', absenceController.getAbsenceByStu
 
 // PUT /api/absences/:id - Update absence (approve, change status, add notes)
 router.put('/:id', absenceController.updateAbsence);
+// DELETE /api/absences/:id - Delete absence record
+router.delete('/:id', absenceController.deleteAbsence);
+
 
 module.exports = router;

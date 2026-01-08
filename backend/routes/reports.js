@@ -1,11 +1,11 @@
 const express = require('express');
 const reportController = require('../controllers/reportController');
-const auth = require('../middleware/auth');
+const { requireMentorOrCoach } = require('../middleware/auth');
 
 const router = express.Router();
 
 // All routes require authentication and mentor/coach role
-router.use(auth);
+router.use(requireMentorOrCoach);
 
 // GET /api/reports/attendance - Get attendance summary (for web display)
 router.get('/attendance', reportController.getAttendanceSummary);

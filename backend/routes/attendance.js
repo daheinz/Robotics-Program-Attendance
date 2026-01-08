@@ -85,11 +85,20 @@ router.get('/export', requireMentorOrCoach, validateDateRange, handleValidationE
 // POST /attendance/admin - Admin create session
 router.post('/admin', requireMentorOrCoach, validateAdminCreate, handleValidationErrors, AttendanceController.adminCreate);
 
+// GET /attendance/user/:userId/status - Get user's current session status (MUST BE BEFORE /user/:id)
+router.get('/user/:userId/status', requireMentorOrCoach, param('userId').isUUID(), handleValidationErrors, AttendanceController.getUserStatus);
+
 // GET /attendance/user/:id - Get attendance history for a user
 router.get('/user/:id', requireMentorOrCoach, validateUserId, handleValidationErrors, AttendanceController.getByUser);
 
 // PATCH /attendance/:sessionId/admin - Admin update session
 router.patch('/:sessionId/admin', requireMentorOrCoach, validateSessionId, validateAdminUpdate, handleValidationErrors, AttendanceController.adminUpdateSession);
+
+// POST /attendance/user/:userId/quick-checkin - Quick check-in for today with just check-in time
+router.post('/user/:userId/quick-checkin', requireMentorOrCoach, param('userId').isUUID(), body('checkInTime').isISO8601(), handleValidationErrors, AttendanceController.quickCheckIn);
+
+// POST /attendance/user/:userId/quick-checkout - Quick check-out for today with just check-out time  
+router.post('/user/:userId/quick-checkout', requireMentorOrCoach, param('userId').isUUID(), body('checkOutTime').isISO8601(), handleValidationErrors, AttendanceController.quickCheckOut);
 
 // PATCH /attendance/:sessionId - Correct an attendance session
 router.patch('/:sessionId', requireMentorOrCoach, validateSessionId, validateCorrectSession, handleValidationErrors, AttendanceController.correctSession);

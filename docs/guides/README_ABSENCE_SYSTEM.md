@@ -44,6 +44,7 @@ The Robotics Program Attendance System has been successfully enhanced with a com
 - ✅ CSV export for reports
 - ✅ Detailed audit reports (text format)
 - ✅ Future absence scheduling
+- ✅ Configurable Presence Board window (start/end hours) via System Settings (defaults 8–24)
 
 ### 5. **Integration**
 - ✅ Works with existing check-in/check-out system

@@ -5,6 +5,11 @@ const User = require('../models/User');
 exports.createAbsence = async (req, res, next) => {
   try {
     const { studentId, absenceDate, dayOfWeek, notes = '', approvedBy = null, status = 'unapproved', seasonType = 'build' } = req.body;
+    const createdBy = req.user?.id;
+
+    if (!createdBy) {
+      return res.status(401).json({ error: 'User ID required for audit logging' });
+    }
     
     // Validate input
     if (!studentId || !absenceDate || dayOfWeek === undefined) {
@@ -32,7 +37,8 @@ exports.createAbsence = async (req, res, next) => {
       status, 
       notes, 
       approvedBy, 
-      seasonType 
+      seasonType,
+      createdBy,
     });
     
     res.status(201).json(absence);
@@ -40,6 +46,19 @@ exports.createAbsence = async (req, res, next) => {
     if (error.code === '23505') {
       return res.status(400).json({ error: 'Absence already exists for this student on this date' });
     }
+    next(error);
+  }
+};
+
+// Public: Get absences summary for a specific date (minimal fields)
+// Responds with array of { student_id, status }
+exports.getAbsencesForDatePublic = async (req, res, next) => {
+  try {
+    const date = req.query.date || new Date().toISOString().split('T')[0];
+    const seasonType = req.query.seasonType || null;
+    const rows = await Absence.findByDateSummary(date, seasonType);
+    res.json(rows);
+  } catch (error) {
     next(error);
   }
 };
@@ -134,7 +153,8 @@ exports.getAuditLog = async (req, res, next) => {
     }
     
     const logs = await Absence.getAuditLog(id);
-    res.json({ absenceId: id, logs });
+    res.set('Cache-Control', 'no-store');
+    res.status(200).json({ absenceId: id, logs });
   } catch (error) {
     next(error);
   }
@@ -162,6 +182,28 @@ exports.getFutureAbsences = async (req, res, next) => {
   try {
     const absences = await Absence.findFutureAbsences();
     res.json(absences);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete an absence record
+exports.deleteAbsence = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const deletedBy = req.user?.id;
+
+    if (!deletedBy) {
+      return res.status(401).json({ error: 'User ID required for audit logging' });
+    }
+
+    const absence = await Absence.findById(id);
+    if (!absence) {
+      return res.status(404).json({ error: 'Absence not found' });
+    }
+
+    await Absence.delete(id, deletedBy);
+    res.json({ message: 'Absence deleted successfully' });
   } catch (error) {
     next(error);
   }

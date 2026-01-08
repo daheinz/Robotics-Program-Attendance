@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import './CoreHoursConfig.css';
 import api from '../services/api';
 
@@ -144,7 +145,12 @@ export default function CoreHoursConfig() {
 
   return (
     <div className="core-hours-config">
-      <h1>Core Hours Configuration</h1>
+      <div className="header-row">
+        <h1>Core Hours Configuration</h1>
+        <Link to="/" className="btn btn-secondary">
+          ← Back to Home
+        </Link>
+      </div>
 
       <div className="controls">
         <div className="season-selector">

@@ -642,6 +642,11 @@ function AttendanceTab() {
   const [editSessionId, setEditSessionId] = useState(null);
   const [editForm, setEditForm] = useState({ checkInTime: '', checkOutTime: '', reflectionText: '', auditReason: '' });
   const [createForm, setCreateForm] = useState({ userId: '', checkInTime: '', checkOutTime: '', reflectionText: '', auditReason: '' });
+  const [quickCheckUserId, setQuickCheckUserId] = useState('');
+  const [quickCheckStatus, setQuickCheckStatus] = useState(null);
+  const [quickCheckInTime, setQuickCheckInTime] = useState('');
+  const [quickCheckOutTime, setQuickCheckOutTime] = useState('');
+  const [activeSessionCheckInTime, setActiveSessionCheckInTime] = useState(null);
 
   useEffect(() => {
     loadUsers();
@@ -789,6 +794,89 @@ function AttendanceTab() {
     }
   };
 
+  const handleQuickCheckUserChange = async (userId) => {
+    setQuickCheckUserId(userId);
+    setQuickCheckStatus(null);
+    setQuickCheckInTime('');
+    setQuickCheckOutTime('');
+    setActiveSessionCheckInTime(null);
+    setError('');
+    
+    if (!userId) return;
+    
+    try {
+      const response = await attendanceApi.getUserStatus(userId);
+      setQuickCheckStatus(response.data.checkedIn ? 'checked-in' : 'checked-out');
+      if (response.data.checkedIn && response.data.session) {
+        setActiveSessionCheckInTime(response.data.session.check_in_time);
+      }
+    } catch (err) {
+      setError('Failed to check status');
+    }
+  };
+
+  const handleQuickCheckIn = async () => {
+    if (!quickCheckUserId) {
+      setError('Please select a user');
+      return;
+    }
+    if (!quickCheckInTime) {
+      setError('Please select a check-in time');
+      return;
+    }
+    
+    // Combine today's date with the selected time
+    const today = new Date();
+    const [hours, minutes] = quickCheckInTime.split(':');
+    const checkInDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes);
+    const now = new Date();
+    if (checkInDateTime > now) {
+      setError('Cannot enter a future time');
+      return;
+    }
+    
+    try {
+      const response = await attendanceApi.quickCheckIn(quickCheckUserId, checkInDateTime.toISOString());
+      setQuickCheckInTime('');
+      setQuickCheckStatus('checked-in');
+      setActiveSessionCheckInTime(response.data.session.check_in_time);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to check in');
+    }
+  };
+
+  const handleQuickCheckOut = async () => {
+    if (!quickCheckUserId) {
+      setError('Please select a user');
+      return;
+    }
+    if (!quickCheckOutTime) {
+      setError('Please select a check-out time');
+      return;
+    }
+    
+    // Combine today's date with the selected time
+    const today = new Date();
+    const [hours, minutes] = quickCheckOutTime.split(':');
+    const checkOutDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes);
+    const now = new Date();
+    if (checkOutDateTime > now) {
+      setError('Cannot enter a future time');
+      return;
+    }
+    
+    try {
+      await attendanceApi.quickCheckOut(quickCheckUserId, checkOutDateTime.toISOString());
+      setQuickCheckOutTime('');
+      setQuickCheckStatus('checked-out');
+      setActiveSessionCheckInTime(null);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to check out');
+    }
+  };
+
   const formatDateTime = (dt) => dt ? new Date(dt).toLocaleString() : '';
 
   return (
@@ -826,6 +914,48 @@ function AttendanceTab() {
 
         <div className="attendance-main">
           <div className="create-session">
+            <h3>User Checkin/Checkout for Today</h3>
+            <div className="quick-check-form">
+              <select value={quickCheckUserId} onChange={(e) => handleQuickCheckUserChange(e.target.value)}>
+                <option value="">Select user</option>
+                {users.map(u => (
+                  <option key={u.id} value={u.id}>{u.alias} ({u.role})</option>
+                ))}
+              </select>
+              
+              {quickCheckStatus && (
+                <div style={{ marginTop: '10px' }}>
+                  {quickCheckStatus === 'checked-out' ? (
+                    <>
+                      <p style={{ marginBottom: '10px', color: '#28a745', fontWeight: 'bold' }}>Status: Checked Out</p>
+                      <div>
+                        <label>Check In Time:</label>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <input type="time" value={quickCheckInTime} onChange={(e) => setQuickCheckInTime(e.target.value)} />
+                          <button onClick={handleQuickCheckIn} className="btn btn-sm btn-success" disabled={!quickCheckInTime}>Check In</button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p style={{ marginBottom: '10px', color: '#007bff', fontWeight: 'bold' }}>
+                        Status: Checked In at {activeSessionCheckInTime ? new Date(activeSessionCheckInTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
+                      </p>
+                      <div>
+                        <label>Check Out Time:</label>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <input type="time" value={quickCheckOutTime} onChange={(e) => setQuickCheckOutTime(e.target.value)} />
+                          <button onClick={handleQuickCheckOut} className="btn btn-sm btn-danger" disabled={!quickCheckOutTime}>Check Out</button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="create-session" style={{ marginTop: '30px' }}>
             <h3>Add Session</h3>
             <form onSubmit={handleCreate} className="create-form">
               <select value={createForm.userId} onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })} required>
@@ -925,6 +1055,8 @@ function ReflectionsTab() {
 function SettingsTab() {
   const [settings, setSettings] = useState(null);
   const [prompt, setPrompt] = useState('');
+  const [presenceStart, setPresenceStart] = useState(8);
+  const [presenceEnd, setPresenceEnd] = useState(24);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -938,6 +1070,12 @@ function SettingsTab() {
       const response = await settingsApi.get();
       setSettings(response.data);
       setPrompt(response.data.reflection_prompt);
+      if (response.data.presence_start_hour !== undefined) {
+        setPresenceStart(response.data.presence_start_hour);
+      }
+      if (response.data.presence_end_hour !== undefined) {
+        setPresenceEnd(response.data.presence_end_hour);
+      }
     } catch (err) {
       setError('Failed to load settings: ' + (err.response?.data?.error || err.message));
     } finally {
@@ -947,8 +1085,17 @@ function SettingsTab() {
 
   const handleUpdateSettings = async (e) => {
     e.preventDefault();
+    setError('');
+    if (Number(presenceStart) >= Number(presenceEnd)) {
+      setError('Presence start hour must be less than end hour');
+      return;
+    }
     try {
-      await settingsApi.update(prompt);
+      await settingsApi.update({
+        reflectionPrompt: prompt,
+        presenceStartHour: Number(presenceStart),
+        presenceEndHour: Number(presenceEnd),
+      });
       alert('Settings updated successfully');
       fetchSettings();
     } catch (err) {
@@ -973,6 +1120,28 @@ function SettingsTab() {
               onChange={(e) => setPrompt(e.target.value)}
               rows="4"
               placeholder="Enter the reflection prompt for students"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Presence Timeline Start Hour (0-23)</label>
+            <input
+              type="number"
+              min="0"
+              max="23"
+              value={presenceStart}
+              onChange={(e) => setPresenceStart(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Presence Timeline End Hour (1-24)</label>
+            <input
+              type="number"
+              min="1"
+              max="24"
+              value={presenceEnd}
+              onChange={(e) => setPresenceEnd(e.target.value)}
             />
           </div>
 

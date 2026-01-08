@@ -24,7 +24,22 @@ Welcome! This index helps you navigate all the documentation for the new Absence
    - Compliance rules
    - Reporting needs
 
-5. **CONFIG_EXAMPLES.md** - Configuration and API examples
+5. **COACH_MENTOR_GUIDE.md** - Daily usage guide for coaches and mentors
+   - Daily tasks (check presence, record absences)
+   - Weekly tasks (reports, review)
+   - Seasonal tasks (configure core hours)
+   - Common scenarios and troubleshooting
+   - Best practices
+
+6. **STUDENT_GUIDE.md** - Daily usage guide for students
+   - Check-in/check-out procedures
+   - Writing reflections
+   - Requesting time off
+   - Viewing attendance
+   - Common questions and answers
+   - Best practices
+
+7. **CONFIG_EXAMPLES.md** - Configuration and API examples
    - Core hours setup examples
    - Absence recording examples
    - Report format examples
@@ -33,7 +48,7 @@ Welcome! This index helps you navigate all the documentation for the new Absence
    - Status values
 
 ### 🏗️ Technical Details
-6. **TECHNICAL_ARCHITECTURE.md** - System design and architecture
+8. **TECHNICAL_ARCHITECTURE.md** - System design and architecture
    - System architecture overview
    - Data flow diagrams
    - Database schema details
@@ -42,7 +57,7 @@ Welcome! This index helps you navigate all the documentation for the new Absence
    - Deployment considerations
 
 ### ✅ Deployment
-7. **PRE_DEPLOYMENT_CHECKLIST.md** - Verification before going live
+9. **PRE_DEPLOYMENT_CHECKLIST.md** - Verification before going live
    - Implementation checklist
    - Testing preparation
    - Code quality verification
@@ -65,9 +80,14 @@ Welcome! This index helps you navigate all the documentation for the new Absence
 - Reference: PRE_DEPLOYMENT_CHECKLIST.md (verification)
 
 #### **Mentors/Coaches (Users)**
-- Start: ABSENCE_MANAGEMENT_GUIDE.md (Section: Usage Workflow)
-- Then: CONFIG_EXAMPLES.md (Absence Recording Examples)
-- Reference: ABSENCE_MANAGEMENT_GUIDE.md (Troubleshooting)
+- Start: COACH_MENTOR_GUIDE.md (Day-to-day usage)
+- Reference: ABSENCE_MANAGEMENT_GUIDE.md (Detailed features)
+- Examples: CONFIG_EXAMPLES.md (Absence recording)
+
+#### **Students (Users)**
+- Start: STUDENT_GUIDE.md (How to use the system)
+- Quick Reference: STUDENT_GUIDE.md (Quick Reference Card)
+- Help: Ask a mentor or coach
 
 #### **Project Managers**
 - Start: IMPLEMENTATION_SUMMARY.md (overview)
@@ -97,6 +117,16 @@ Welcome! This index helps you navigate all the documentation for the new Absence
 1. Read: ABSENCE_MANAGEMENT_GUIDE.md (Setup Instructions)
 2. View: CONFIG_EXAMPLES.md (Core Hours Configuration Examples)
 3. Reference: ABSENCE_MANAGEMENT_GUIDE.md (Usage Workflow)
+
+### "I want to learn daily usage" (Coaches/Mentors)
+1. Read: COACH_MENTOR_GUIDE.md (Daily Tasks section)
+2. Practice: Follow common scenarios
+3. Reference: COACH_MENTOR_GUIDE.md (Troubleshooting)
+
+### "I'm a student - how do I use this?" (Students)
+1. Read: STUDENT_GUIDE.md (Your First Time section)
+2. Follow: STUDENT_GUIDE.md (Daily Check-In/Check-Out)
+3. Print: STUDENT_GUIDE.md (Quick Reference Card)
 
 ### "I want to troubleshoot an issue"
 1. Check: QUICK_START_TESTING.md (Troubleshooting section)
