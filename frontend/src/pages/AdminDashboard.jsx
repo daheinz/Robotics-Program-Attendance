@@ -45,14 +45,12 @@ function AdminDashboard() {
           >
             Reflections
           </button>
-          {userRole === 'coach' && (
-            <button
-              className={`nav-tab ${activeTab === 'settings' ? 'active' : ''}`}
-              onClick={() => setActiveTab('settings')}
-            >
-              Settings
-            </button>
-          )}
+          <button
+            className={`nav-tab ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            Settings
+          </button>
         </nav>
 
         <div className="dashboard-content">
@@ -60,7 +58,7 @@ function AdminDashboard() {
           {activeTab === 'contacts' && <ContactsTab userRole={userRole} />}
           {activeTab === 'attendance' && <AttendanceTab />}
           {activeTab === 'reflections' && <ReflectionsTab />}
-          {userRole === 'coach' && activeTab === 'settings' && <SettingsTab />}
+          {activeTab === 'settings' && <SettingsTab />}
         </div>
       </div>
     </div>

@@ -249,9 +249,18 @@ This guide covers how to use the Robotics Attendance System day-to-day as a ment
 - **Presence Timeline Start Hour**: When timeline starts (default 8)
 - **Presence Timeline End Hour**: When timeline ends (default 24)
 
+**How to Update Settings**:
+1. Navigate to Admin Dashboard → **Settings** tab
+2. Modify any of the settings:
+   - Change reflection prompt text
+   - Adjust timeline start hour (0-23)
+   - Adjust timeline end hour (1-24)
+3. Click **"Save Settings"**
+4. For timeline changes: Refresh Presence Board to see new window
+
 **When to Change**:
 - Reflection prompt: Change periodically to keep reflections meaningful
-- Timeline hours: Adjust if your practices are outside 8am-midnight window
+- Timeline hours: Adjust if your practices are outside 8am-midnight window (e.g., if you meet 3pm-6pm, set to 15 and 18)
 
 ---
 
@@ -377,8 +386,8 @@ This guide covers how to use the Robotics Attendance System day-to-day as a ment
 4. Refresh Presence Board
 
 ### "Can't approve absence"
-**Cause**: Only coaches can approve (if you're a mentor)  
-**Solution**: Ask a coach to approve, or have your access level changed
+**Cause**: Permission issue with your account  
+**Solution**: Both mentors and coaches can approve absences - verify you're logged in correctly, or ask an administrator to check your account role
 
 ### "Report shows incorrect hours"
 **Cause**: Students forgot to check out, sessions incomplete  

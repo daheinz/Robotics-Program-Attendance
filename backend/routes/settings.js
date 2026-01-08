@@ -40,6 +40,6 @@ router.get('/', requireMentorOrCoach, SettingsController.get);
 router.get('/public', SettingsController.getPublic);
 
 // PATCH /settings - Update system settings
-router.patch('/', requireCoach, validateUpdateSettings, handleValidationErrors, SettingsController.update);
+router.patch('/', requireMentorOrCoach, validateUpdateSettings, handleValidationErrors, SettingsController.update);
 
 module.exports = router;

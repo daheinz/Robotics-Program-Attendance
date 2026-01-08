@@ -153,15 +153,15 @@ function PresenceBoard() {
   const groupB = entries
     .filter(([id, u]) => u.role === 'student' && u.sessions.length > 0)
     .sort((a, b) => a[1].alias.localeCompare(b[1].alias));
-  const groupBIds = new Set(groupB.map(([id]) => Number(id)));
+  const groupBIds = new Set(groupB.map(([id]) => String(id)));
   // Group C: Students with excused absences (today) and no sessions
   const groupC = students
-    .filter(s => isExcused(s.id) && !groupBIds.has(s.id))
+    .filter(s => isExcused(s.id) && !groupBIds.has(String(s.id)))
     .map(s => [s.id, combinedUsers[s.id]])
     .sort((a, b) => a[1].alias.localeCompare(b[1].alias));
   // Group D: Students with unexcused absences OR no absences, and no sessions
   const groupD = students
-    .filter(s => !groupBIds.has(s.id) && !isExcused(s.id))
+    .filter(s => !groupBIds.has(String(s.id)) && !isExcused(s.id))
     .map(s => [s.id, combinedUsers[s.id]])
     .sort((a, b) => a[1].alias.localeCompare(b[1].alias));
 
