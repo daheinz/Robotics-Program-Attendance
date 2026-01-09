@@ -105,6 +105,11 @@ function AppContent() {
                 <h1 className="app-title">Robotics Attendance</h1>
               </div>
               <div className="header-right">
+                {userRole && userRole !== 'student' && (
+                  <Link className="btn btn-secondary" to="/admin">
+                    Admin
+                  </Link>
+                )}
                 <span className="user-info">
                   {userName} ({userRole})
                 </span>

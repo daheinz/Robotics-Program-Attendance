@@ -121,7 +121,8 @@ function StudentDashboard({ userName, userId, userRole, onLogout }) {
   };
 
   const handleCheckOut = async () => {
-    if (!reflection.trim()) {
+    // Reflection is required for students only
+    if (userRole === 'student' && !reflection.trim()) {
       setError('Please enter a reflection before checking out');
       return;
     }
@@ -283,19 +284,22 @@ function StudentDashboard({ userName, userId, userRole, onLogout }) {
             ) : (
               <div className="checkout-section">
                 <div className="form-group">
-                  <label>{reflectionPrompt}</label>
+                  <label>
+                    {reflectionPrompt}
+                    {userRole !== 'student' && <span className="optional-label">(Optional for mentors/coaches)</span>}
+                  </label>
                   <textarea
                     className="reflection-textarea"
                     value={reflection}
                     onChange={(e) => setReflection(e.target.value)}
                     rows="5"
-                    placeholder="Enter your reflection..."
+                    placeholder={userRole === 'student' ? 'Enter your reflection...' : 'Enter your reflection (optional)...'}
                   />
                 </div>
                 <button
                   className="btn btn-large btn-primary"
                   onClick={handleCheckOut}
-                  disabled={loading || !reflection.trim()}
+                  disabled={loading || (userRole === 'student' && !reflection.trim())}
                 >
                   {loading ? 'Checking Out...' : 'Check Out'}
                 </button>

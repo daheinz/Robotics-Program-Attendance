@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import AdminNav from '../components/AdminNav';
 import api, { attendanceApi, kioskApi, settingsApi } from '../services/api';
 import './PresenceBoard.css';
 

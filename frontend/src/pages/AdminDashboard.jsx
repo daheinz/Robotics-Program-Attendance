@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api, { userApi, settingsApi, contactApi, attendanceApi } from '../services/api';
+import AdminNav from '../components/AdminNav';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
@@ -19,8 +20,10 @@ function AdminDashboard() {
         </div>
       </header>
 
-      <div className="dashboard-container">
-        <nav className="dashboard-nav">
+      <div className="dashboard-container admin-with-nav">
+        <AdminNav />
+        <div className="dashboard-main">
+          <nav className="dashboard-nav">
           <button
             className={`nav-tab ${activeTab === 'attendance' ? 'active' : ''}`}
             onClick={() => setActiveTab('attendance')}
@@ -67,6 +70,7 @@ function AdminDashboard() {
           {activeTab === 'absences' && <AbsencesTab />}
           {activeTab === 'settings' && <SettingsTab />}
           {activeTab === 'testing' && <TestingTab />}
+        </div>
         </div>
       </div>
     </div>

@@ -61,6 +61,11 @@ function parseTimeString(timeStr) {
   return { hours, minutes, seconds };
 }
 
+// Format times for human-readable absence notes (e.g., "5:30 PM")
+function formatTimeForNote(date) {
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
 /**
  * Get the end date/time for today, handling midnight edge case
  * If core hours end at 11:59 PM and now is 12:14 AM, return yesterday's end time
@@ -124,6 +129,7 @@ async function processCoreHoursSession(coreHours, now) {
     // Total duration - 30 minute grace period
     const totalMinutes = (endDateTime - startDateTime) / (1000 * 60);
     const requiredMinutes = totalMinutes - 30;
+    const coreHoursWindow = `${formatTimeForNote(startDateTime)} to ${formatTimeForNote(endDateTime)}`;
     
     // Get all students
     const students = await User.findAll({ role: 'student' });
@@ -182,7 +188,7 @@ async function processCoreHoursSession(coreHours, now) {
             absenceDate: absenceDate,
             dayOfWeek: coreHours.day_of_week,
             status: 'unapproved',
-            notes: 'System Generated - Failed to meet criteria for core hours.',
+            notes: `System Generated - Failed to meet criteria for core hours. Core hours for this date were ${coreHoursWindow} and you were not present during that time frame.`,
             seasonType: coreHours.season_type,
             createdBy: null
           });
