@@ -30,7 +30,7 @@ const validateCorrectSession = [
 
 const validateAdminUpdate = [
   body('checkInTime').isISO8601().withMessage('checkInTime is required and must be ISO8601'),
-  body('checkOutTime').isISO8601().withMessage('checkOutTime is required and must be ISO8601'),
+  body('checkOutTime').optional().isISO8601().withMessage('checkOutTime must be ISO8601 if provided'),
   body('auditReason').isString().withMessage('auditReason is required'),
   body('reflectionText').optional().isString(),
 ];
@@ -90,6 +90,9 @@ router.get('/user/:userId/status', requireMentorOrCoach, param('userId').isUUID(
 
 // GET /attendance/user/:id - Get attendance history for a user
 router.get('/user/:id', requireMentorOrCoach, validateUserId, handleValidationErrors, AttendanceController.getByUser);
+
+// GET /attendance/:sessionId/audit-log - Get audit log for an attendance session
+router.get('/:sessionId/audit-log', requireMentorOrCoach, validateSessionId, handleValidationErrors, AttendanceController.getAuditLog);
 
 // PATCH /attendance/:sessionId/admin - Admin update session
 router.patch('/:sessionId/admin', requireMentorOrCoach, validateSessionId, validateAdminUpdate, handleValidationErrors, AttendanceController.adminUpdateSession);

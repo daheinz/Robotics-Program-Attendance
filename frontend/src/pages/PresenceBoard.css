@@ -17,22 +17,45 @@
   font-weight: 500;
 }
 
-/* Core hours compliance status indicators */
-.status-indicator {
+/* Status column for checkmark / strikethrough */
+
+.status-col {
+  width: 16px;
+  min-width: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.25rem;
+  background: #f2f2f2;
+  border-radius: 4px;
+}
+
+
+.status-icon {
   display: inline-block;
-  margin-left: 0.5rem;
-  font-weight: bold;
-  font-size: 1.2rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  line-height: 1;
+  color: #fff;
+  background: #f2f2f2;
+  border-radius: 4px;
+  padding: 2px 4px;
 }
 
-.status-indicator.checkmark {
-  color: #22c55e;
+/* Checkmark and A: dark green, U: red */
+.status-icon.checkmark {
+  background: #176a1a;
+  color: #fff;
+}
+.status-icon.approved {
+  background: #176a1a;
+  color: #fff;
+}
+.status-icon.unexcused {
+  background: #e53935;
+  color: #fff;
 }
 
-.status-indicator.unexcused {
-  color: #dc2626;
-  text-decoration: line-through;
-}
 .timeline-grid {
   flex: 1;
   background: rgba(255,255,255,0.12);
@@ -126,7 +149,8 @@
 .timeline-row {
   display: flex;
   align-items: center;
-  min-height: 36px;
+  min-height: 20px !important;
+  gap: 0;
 }
 
 .timeline-label.user-label {
@@ -134,19 +158,23 @@
   min-width: 120px;
   color: #fff;
   font-weight: 500;
-  font-size: 1.1rem;
-  padding-right: 0.5rem;
+  font-size: 0.85rem !important;
+  padding: 0.15rem 0.4rem !important;
   text-align: right;
   background: white;
-  border-radius: 6px;
-  padding: 0.4rem 0.75rem;
-  margin-right: 0.5rem;
+  border-radius: 2px !important;
+  margin-right: 0.25rem !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+  white-space: nowrap;
 }
 
 .timeline-bars {
   position: relative;
   flex: 1 1 0;
-  height: 28px;
+  height: 16px !important;
   background: rgba(255,255,255,0.08);
   border-radius: 6px;
   overflow: hidden;
@@ -154,8 +182,8 @@
 
 .timeline-bar {
   position: absolute;
-  top: 4px;
-  height: 20px;
+  top: 1px !important;
+  height: 14px !important;
   background: var(--color-past-session, #4fd1c5);
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -272,35 +300,9 @@
   font-size: 1.5rem;
 }
 
-/* Compact timeline overrides: enforce single-line names and tighter rows */
-.timeline-row {
-  min-height: 20px;
-  gap: 0;
-}
-
-.timeline-label.user-label,
+/* Additional compact overrides */
 .timeline-label.user-label-header {
   white-space: nowrap;
-}
-
-.timeline-label.user-label {
-  font-size: 0.85rem;
-  padding: 0.15rem 0.4rem;
-  margin-right: 0.25rem;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  border-radius: 2px;
-}
-
-.timeline-bars {
-  height: 16px;
-}
-
-.timeline-bar {
-  top: 1px;
-  height: 14px;
 }
 
 .timeline-header {
@@ -313,9 +315,4 @@
 
 .timeline-body {
   gap: 0.1rem;
-}
-
-.status-indicator {
-  font-size: 1rem;
-  margin-left: 0.25rem;
 }

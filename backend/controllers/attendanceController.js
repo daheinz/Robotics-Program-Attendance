@@ -314,21 +314,27 @@ class AttendanceController {
       if (!auditReason) {
         return res.status(400).json({ error: 'auditReason is required' });
       }
-      if (!checkInTime || !checkOutTime) {
-        return res.status(400).json({ error: 'checkInTime and checkOutTime are required' });
+      if (!checkInTime) {
+        return res.status(400).json({ error: 'checkInTime is required' });
       }
 
       const start = new Date(checkInTime);
-      const end = new Date(checkOutTime);
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      if (isNaN(start.getTime())) {
         return res.status(400).json({ error: 'Invalid date format' });
       }
-      if (end <= start) {
-        return res.status(400).json({ error: 'checkOutTime must be after checkInTime' });
-      }
-      const diffHours = (end - start) / (1000 * 60 * 60);
-      if (diffHours > 12) {
-        return res.status(400).json({ error: 'Duration cannot exceed 12 hours' });
+
+      if (checkOutTime) {
+        const end = new Date(checkOutTime);
+        if (isNaN(end.getTime())) {
+          return res.status(400).json({ error: 'Invalid date format' });
+        }
+        if (end <= start) {
+          return res.status(400).json({ error: 'checkOutTime must be after checkInTime' });
+        }
+        const diffHours = (end - start) / (1000 * 60 * 60);
+        if (diffHours > 12) {
+          return res.status(400).json({ error: 'Duration cannot exceed 12 hours' });
+        }
       }
 
       const session = await AttendanceSession.update(sessionId, { checkInTime, checkOutTime });
@@ -353,6 +359,18 @@ class AttendanceController {
     } catch (error) {
       console.error('Error updating attendance:', error);
       res.status(500).json({ error: 'Failed to update attendance' });
+    }
+  }
+
+  // GET /attendance/:sessionId/audit-log - audit history for a session
+  static async getAuditLog(req, res) {
+    try {
+      const { sessionId } = req.params;
+      const logs = await AuditLog.findByAttendanceSession(sessionId);
+      res.json({ logs });
+    } catch (error) {
+      console.error('Error fetching attendance audit log:', error);
+      res.status(500).json({ error: 'Failed to fetch audit log' });
     }
   }
 
@@ -439,7 +457,7 @@ class AttendanceController {
   static async quickCheckIn(req, res) {
     try {
       const { userId } = req.params;
-      const { checkInTime } = req.body;
+      const { checkInTime, auditReason } = req.body;
 
       if (!checkInTime) {
         return res.status(400).json({ error: 'checkInTime is required' });
@@ -467,7 +485,7 @@ class AttendanceController {
           actorUserId: req.user.id,
           actionType: 'QUICK_CHECK_IN',
           targetUserId: userId,
-          details: { sessionId: session.id, checkInTime },
+          details: { sessionId: session.id, checkInTime, reason: auditReason || 'Admin quick check-in' },
         });
       }
 
@@ -501,7 +519,7 @@ class AttendanceController {
   static async quickCheckOut(req, res) {
     try {
       const { userId } = req.params;
-      const { checkOutTime } = req.body;
+      const { checkOutTime, auditReason } = req.body;
 
       if (!checkOutTime) {
         return res.status(400).json({ error: 'checkOutTime is required' });
@@ -528,7 +546,7 @@ class AttendanceController {
           actorUserId: req.user.id,
           actionType: 'QUICK_CHECK_OUT',
           targetUserId: userId,
-          details: { sessionId: session.id, checkOutTime },
+          details: { sessionId: session.id, checkOutTime, reason: auditReason || 'Admin quick check-out' },
         });
       }
 

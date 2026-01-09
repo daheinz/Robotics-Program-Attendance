@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api, { attendanceApi, kioskApi, settingsApi } from '../services/api';
 import './PresenceBoard.css';
 
@@ -20,6 +20,8 @@ function PresenceBoard() {
   const [now, setNow] = useState(new Date());
   const [seasonType, setSeasonType] = useState('build');
   const [timelineWindow, setTimelineWindow] = useState({ min: 8, max: 24 });
+  const [barOffsetPx, setBarOffsetPx] = useState(160);
+  const timelineBodyRef = useRef(null);
   const [colors, setColors] = useState({
     studentCheckedIn: '#48bb78',
     mentorCheckedIn: '#4299e1',
@@ -226,6 +228,18 @@ function PresenceBoard() {
   const span = Math.max(1, maxHour - minHour);
   const HOURS = Array.from({ length: maxHour - minHour + 1 }, (_, i) => minHour + i);
 
+  // Measure the pixel offset to the first timeline bar so the current-time marker aligns with bars
+  useEffect(() => {
+    if (!timelineBodyRef.current) return;
+    const firstBars = timelineBodyRef.current.querySelector('.timeline-bars');
+    if (firstBars) {
+      const bodyRect = timelineBodyRef.current.getBoundingClientRect();
+      const barsRect = firstBars.getBoundingClientRect();
+      const offset = Math.max(0, barsRect.left - bodyRect.left);
+      setBarOffsetPx(offset);
+    }
+  }, [sessions, students, timelineWindow]);
+
   // Helper: consistent bar positioning logic for active and past sessions
   const computeBarPosition = (checkIn, checkOut) => {
     const startHour = Math.max(getHourOffset(checkIn), minHour);
@@ -289,10 +303,11 @@ function PresenceBoard() {
                       left: `${Math.max(0, left)}%`,
                       width: `${Math.min(100, width)}%`,
                       height: '100%',
-                      border: '2px solid #ff6b6b',
+                      border: '3px solid #ff6b6b',
                       borderRadius: '4px',
                       pointerEvents: 'none',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      background: 'rgba(255, 107, 107, 0.15)'
                     }}
                     title={`Required: ${ch.start_time} - ${ch.end_time}`}
                   ></div>
@@ -305,7 +320,7 @@ function PresenceBoard() {
             ))}
           </div>
         </div>
-        <div className="timeline-body">
+        <div className="timeline-body" ref={timelineBodyRef}>
           {/* Core hours shaded regions - drawn first so they're behind everything */}
           {todaysCoreHours.map((ch, idx) => {
             // Parse start and end times
@@ -326,13 +341,13 @@ function PresenceBoard() {
                   className="core-hours-shading"
                   style={{
                     position: 'absolute',
-                    left: `calc(160px + (100% - 160px) * ${Math.max(0, left)} / 100)`,
-                    width: `calc((100% - 160px) * ${Math.min(100, width)} / 100)`,
+                    left: `calc(${barOffsetPx}px + (100% - ${barOffsetPx}px) * ${Math.max(0, left)} / 100)`,
+                    width: `calc((100% - ${barOffsetPx}px) * ${Math.min(100, width)} / 100)`,
                     top: 0,
                     bottom: 0,
-                    background: 'rgba(100, 150, 255, 0.2)',
-                    borderLeft: '2px solid rgba(100, 150, 255, 0.5)',
-                    borderRight: '2px solid rgba(100, 150, 255, 0.5)',
+                    background: 'rgba(50, 75, 128, 0.5)',
+                    borderLeft: '3px solid rgba(50, 75, 128, 0.7)',
+                    borderRight: '3px solid rgba(50, 75, 128, 0.7)',
                     pointerEvents: 'none',
                     zIndex: 0
                   }}
@@ -353,7 +368,7 @@ function PresenceBoard() {
               return (
                 <div 
                   className="current-time-marker" 
-                  style={{ left: `calc(160px + (100% - 160px) * ${position} / 100)` }}
+                  style={{ left: `calc(${barOffsetPx}px + (100% - ${barOffsetPx}px) * ${position} / 100)` }}
                   title={`Current time: ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`}
                 ></div>
               );
@@ -368,6 +383,7 @@ function PresenceBoard() {
             const hasSession = user.sessions.length > 0;
             return (
               <div className={`timeline-row`} key={`A-${userId}`}>
+                <div className="status-col" aria-label="status" />
                 <div className={`timeline-label user-label ${hasSession ? 'mentor-coach-checked-in' : 'not-checked-in'}`}>
                   {user.alias} {user.role === 'mentor' ? '(Mentor)' : user.role === 'coach' ? '(Coach)' : ''}
                 </div>
@@ -396,11 +412,19 @@ function PresenceBoard() {
             const status = coreHoursStatus[userId];
             return (
               <div className={`timeline-row`} key={`B-${userId}`}>
+                <div className="status-col" aria-label="status">
+                  {status === 'compliant' && (
+                    <span className="status-icon checkmark">✓</span>
+                  )}
+                  {status === 'excused_absent' && (
+                    <span className="status-icon approved">E</span>
+                  )}
+                  {status === 'unexcused_absent' && (
+                    <span className="status-icon unexcused">U</span>
+                  )}
+                </div>
                 <div className={`timeline-label user-label ${hasSession ? 'student-checked-in' : 'not-checked-in'}`}>
                   {user.alias}
-                  {status === 'compliant' && <span className="status-indicator checkmark">✓</span>}
-                  {status === 'excused_absent' && <span className="status-indicator checkmark">✓</span>}
-                  {status === 'unexcused_absent' && <span className="status-indicator unexcused">⊘</span>}
                 </div>
                 <div className="timeline-bars">
                   {user.sessions.map((session, idx) => {
@@ -426,9 +450,13 @@ function PresenceBoard() {
             const status = coreHoursStatus[userId];
             return (
               <div className={`timeline-row`} key={`C-${userId}`}>
+                <div className="status-col" aria-label="status">
+                  {status === 'excused_absent' && (
+                    <span className="status-icon approved">E</span>
+                  )}
+                </div>
                 <div className={`timeline-label user-label not-checked-in`}>
                   {user.alias}
-                  {status === 'excused_absent' && <span className="status-indicator checkmark">✓</span>}
                 </div>
                 <div className="timeline-bars">
                   <div className="excused-bar" title={`Excused absence: ${absence?.notes || ''}`}></div>
@@ -444,10 +472,19 @@ function PresenceBoard() {
             const status = coreHoursStatus[userId];
             return (
               <div className={`timeline-row`} key={`D-${userId}`}>
+                <div className="status-col" aria-label="status">
+                  {status === 'compliant' && (
+                    <span className="status-icon checkmark">✓</span>
+                  )}
+                  {status === 'excused_absent' && (
+                    <span className="status-icon approved">E</span>
+                  )}
+                  {status === 'unexcused_absent' && (
+                    <span className="status-icon unexcused">U</span>
+                  )}
+                </div>
                 <div className={`timeline-label user-label not-checked-in`}>
                   {user.alias}
-                  {status === 'compliant' && <span className="status-indicator checkmark">✓</span>}
-                  {status === 'unexcused_absent' && <span className="status-indicator unexcused">⊘</span>}
                 </div>
                 <div className="timeline-bars">
                   {/* Empty bars area to indicate no sessions */}
@@ -460,21 +497,33 @@ function PresenceBoard() {
 
         <div className="timeline-legend">
           <strong>Legend</strong>
-          <div className="legend-item">
-            <span className="legend-color" style={{ background: colors.pastSession }}></span>
-            <span>Past presence</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color" style={{ background: colors.activeSession }}></span>
-            <span>Still on site</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color" style={{ background: 'rgba(100, 150, 255, 0.3)', border: '1px solid rgba(100, 150, 255, 0.5)' }}></span>
-            <span>Required Practice</span>
-          </div>
+           <div className="legend-item">
+             <span className="legend-color" style={{ background: colors.pastSession }}></span>
+             <span>Completed Sessions</span>
+           </div>
+           <div className="legend-item">
+             <span className="legend-color" style={{ background: colors.activeSession }}></span>
+             <span>Active Sessions</span>
+           </div>
+           <div className="legend-item">
+            <span className="legend-color" style={{ background: 'rgba(50, 75, 128, 0.5)', border: '1px solid rgba(50, 75, 128, 0.7)' }}></span>
+             <span>Core Hours (required time)</span>
+           </div>
           <div className="legend-item">
             <span className="legend-color" style={{ background: colors.currentTime, width: '3px' }}></span>
             <span>Current time</span>
+          </div>
+          <div className="legend-item">
+            <span className="status-icon checkmark" style={{ background: '#176a1a', color: '#fff' }}>✓</span>
+            <span>Present During Core Hours</span>
+          </div>
+          <div className="legend-item">
+            <span className="status-icon unexcused" style={{ background: '#e53935', color: '#fff' }}>U</span>
+            <span>Unexcused absence</span>
+          </div>
+          <div className="legend-item">
+            <span className="status-icon approved" style={{ background: '#176a1a', color: '#fff' }}>E</span>
+            <span>Excused absence</span>
           </div>
         </div>
       </div>

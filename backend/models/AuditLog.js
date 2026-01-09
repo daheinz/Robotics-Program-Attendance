@@ -51,6 +51,22 @@ class AuditLog {
     const result = await db.query(query, [limit]);
     return result.rows;
   }
+
+  static async findByAttendanceSession(sessionId) {
+    const query = `
+      SELECT 
+        al.*,
+        actor.alias as actor_alias,
+        target.alias as target_alias
+      FROM audit_log al
+      LEFT JOIN users actor ON al.actor_user_id = actor.id
+      LEFT JOIN users target ON al.target_user_id = target.id
+      WHERE al.details ->> 'sessionId' = $1
+      ORDER BY al.created_at DESC
+    `;
+    const result = await db.query(query, [sessionId]);
+    return result.rows;
+  }
 }
 
 module.exports = AuditLog;

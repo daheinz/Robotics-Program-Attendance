@@ -128,7 +128,7 @@ class Absence {
   }
 
   // Update absence (approve, change status, add notes)
-  static async update(id, { status, notes, approvedBy, updatedBy }) {
+  static async update(id, { status, notes, approvedBy, updatedBy, auditReason }) {
     // Get current record to track changes
     const current = await this.findById(id);
     
@@ -141,6 +141,9 @@ class Absence {
     }
     if (approvedBy !== undefined && approvedBy !== current.approved_by) {
       changes.approved_by = { from: current.approved_by, to: approvedBy };
+    }
+    if (auditReason !== undefined && auditReason !== null && String(auditReason).trim().length > 0) {
+      changes.audit_reason = String(auditReason).trim();
     }
     
     const fields = [];
@@ -170,7 +173,7 @@ class Absence {
     
     const result = await db.query(query, values);
     
-    // Create audit log entry
+    // Create audit log entry (log even if only audit_reason provided)
     if (Object.keys(changes).length > 0 && updatedBy) {
       await this.createAuditLog(id, 'updated', updatedBy, changes);
     }

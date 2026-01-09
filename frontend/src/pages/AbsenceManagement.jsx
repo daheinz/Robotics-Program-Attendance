@@ -10,6 +10,9 @@ export default function AbsenceManagement() {
   const [filter, setFilter] = useState('unapproved');
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [searchStudentId, setSearchStudentId] = useState('');
+  const [searchStartDate, setSearchStartDate] = useState('');
+  const [searchEndDate, setSearchEndDate] = useState('');
   const [formData, setFormData] = useState({
     studentId: '',
     absenceDate: '',
@@ -23,6 +26,8 @@ export default function AbsenceManagement() {
     fetchUnapprovedAbsences();
     fetchStudents();
   }, []);
+
+  const isRangeFilterReady = () => searchStudentId && searchStartDate && searchEndDate;
 
   const fetchUnapprovedAbsences = async () => {
     try {
@@ -65,6 +70,12 @@ export default function AbsenceManagement() {
       fetchUnapprovedAbsences();
     } else if (newFilter === 'future') {
       fetchFutureAbsences();
+    } else if (newFilter === 'range') {
+      if (isRangeFilterReady()) {
+        fetchStudentAbsencesRange({ silent: true });
+      } else {
+        setAbsences([]);
+      }
     }
   };
 
@@ -91,6 +102,35 @@ export default function AbsenceManagement() {
       fetchUnapprovedAbsences();
     } else if (filter === 'future') {
       fetchFutureAbsences();
+    } else if (filter === 'range') {
+      fetchStudentAbsencesRange({ silent: true });
+    }
+  };
+
+  const fetchStudentAbsencesRange = async ({ silent = false } = {}) => {
+    if (!isRangeFilterReady()) {
+      if (!silent) {
+        alert('Select a student and start/end dates');
+      }
+      return;
+    }
+
+    if (new Date(searchStartDate) > new Date(searchEndDate)) {
+      alert('Start date must be before end date');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await api.get(`/absences/student/${searchStudentId}`, {
+        params: { startDate: searchStartDate, endDate: searchEndDate }
+      });
+      setAbsences(response.data);
+    } catch (error) {
+      console.error('Error fetching absences:', error);
+      alert('Failed to fetch absences');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -273,6 +313,12 @@ export default function AbsenceManagement() {
           >
             Future Absences
           </button>
+          <button 
+            className={`btn ${filter === 'range' ? 'active' : ''}`}
+            onClick={() => handleFilterChange('range')}
+          >
+            By Student/Date
+          </button>
         </div>
         
         <button 
@@ -294,6 +340,65 @@ export default function AbsenceManagement() {
           {showForm ? 'Cancel' : 'Record New Absence'}
         </button>
       </div>
+
+      {filter === 'range' && (
+        <div className="range-filter">
+          <h3>Filter Absences by Student and Date Range</h3>
+          <div className="range-fields">
+            <div className="form-group inline">
+              <label>Student</label>
+              <select 
+                value={searchStudentId}
+                onChange={(e) => setSearchStudentId(e.target.value)}
+              >
+                <option value="">Select a student...</option>
+                {students.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.alias} - {s.first_name} {s.last_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group inline">
+              <label>Start Date</label>
+              <input 
+                type="date"
+                value={searchStartDate}
+                onChange={(e) => setSearchStartDate(e.target.value)}
+              />
+            </div>
+            <div className="form-group inline">
+              <label>End Date</label>
+              <input 
+                type="date"
+                value={searchEndDate}
+                onChange={(e) => setSearchEndDate(e.target.value)}
+              />
+            </div>
+            <div className="range-actions">
+              <button 
+                className="btn btn-primary"
+                onClick={fetchStudentAbsencesRange}
+                disabled={loading}
+              >
+                {loading ? 'Loading...' : 'Load Absences'}
+              </button>
+              <button
+                className="btn"
+                onClick={() => {
+                  setSearchStudentId('');
+                  setSearchStartDate('');
+                  setSearchEndDate('');
+                  setAbsences([]);
+                }}
+                disabled={loading}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <form className="absence-form" onSubmit={handleSubmit}>
@@ -365,7 +470,11 @@ export default function AbsenceManagement() {
         
         {!loading && absences.length === 0 && (
           <p className="no-data">
-            {filter === 'unapproved' ? 'No unapproved absences' : 'No future absences'}
+            {filter === 'unapproved'
+              ? 'No unapproved absences'
+              : filter === 'future'
+                ? 'No future absences'
+                : 'No absences for the selected student and date range'}
           </p>
         )}
 

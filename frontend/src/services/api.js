@@ -54,10 +54,10 @@ export const attendanceApi = {
   correctSession: (sessionId, updates) => 
     api.patch(`/attendance/${sessionId}`, updates),
   createManual: (data) => api.post('/attendance', data),
-  quickCheckIn: (userId, checkInTime) => 
-    api.post(`/attendance/user/${userId}/quick-checkin`, { checkInTime }),
-  quickCheckOut: (userId, checkOutTime) => 
-    api.post(`/attendance/user/${userId}/quick-checkout`, { checkOutTime }),
+  quickCheckIn: (userId, checkInTime, auditReason) => 
+    api.post(`/attendance/user/${userId}/quick-checkin`, { checkInTime, auditReason }),
+  quickCheckOut: (userId, checkOutTime, auditReason) => 
+    api.post(`/attendance/user/${userId}/quick-checkout`, { checkOutTime, auditReason }),
   export: (startDate, endDate) => 
     api.get('/attendance/export', { 
       params: { start_date: startDate, end_date: endDate },

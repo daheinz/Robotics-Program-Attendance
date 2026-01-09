@@ -52,8 +52,9 @@ app.post('/admin/midnight-checkout', async (req, res) => {
 app.post('/admin/test-core-hours-checker', requireMentorOrCoach, async (req, res) => {
   try {
     console.log('[MANUAL TRIGGER] Running core hours compliance check...');
-    await checkCoreHoursCompliance();
-    res.json({ success: true, message: 'Core hours compliance check completed' });
+    const { testCoreHoursComplianceForToday } = require('./utils/coreHoursChecker');
+    await testCoreHoursComplianceForToday();
+    res.json({ success: true, message: 'Core hours compliance check completed for today' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
