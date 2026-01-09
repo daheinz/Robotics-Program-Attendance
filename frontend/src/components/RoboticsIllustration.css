@@ -1,0 +1,196 @@
+.robotics-illustration {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 10px rgba(0, 217, 255, 0.3));
+}
+
+/* Eye animations */
+.eye-left, .eye-right {
+  animation: eyeBlink 3s infinite;
+}
+
+@keyframes eyeBlink {
+  0%, 90%, 100% {
+    fill: #00D9FF;
+  }
+  95% {
+    fill: #0099CC;
+  }
+}
+
+/* Pupil follow animation */
+.pupil-left {
+  animation: pupilMove 4s infinite;
+  transform-origin: 167px 87px;
+}
+
+.pupil-right {
+  animation: pupilMove 4s infinite 0.5s;
+  transform-origin: 237px 87px;
+}
+
+@keyframes pupilMove {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(2px, -1px);
+  }
+  50% {
+    transform: translate(-2px, 1px);
+  }
+  75% {
+    transform: translate(1px, 2px);
+  }
+}
+
+/* Head bob animation */
+.robot-head {
+  animation: headBob 2s infinite;
+  transform-origin: 200px 100px;
+}
+
+@keyframes headBob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Arm wave animations */
+.left-arm {
+  animation: armWaveLeft 2.5s infinite;
+  transform-origin: 140px 150px;
+}
+
+.right-arm {
+  animation: armWaveRight 2.5s infinite;
+  transform-origin: 260px 150px;
+}
+
+@keyframes armWaveLeft {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-25deg);
+  }
+}
+
+@keyframes armWaveRight {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(25deg);
+  }
+}
+
+/* Wheel spin animation */
+.wheel {
+  animation: wheelSpin 1.5s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes wheelSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* LED pulse effect */
+.led-light {
+  animation: ledPulse 1.5s infinite;
+}
+
+.led-strip {
+  animation: ledStripFlash 1.2s infinite;
+}
+
+@keyframes ledPulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes ledStripFlash {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Sensor pulse */
+.sensor-pulse {
+  animation: sensorPulse 1.8s infinite;
+}
+
+@keyframes sensorPulse {
+  0%, 100% {
+    r: 5;
+    opacity: 0.6;
+  }
+  50% {
+    r: 8;
+    opacity: 0.3;
+  }
+}
+
+/* Motion lines fade in/out */
+.motion-lines {
+  animation: motionFlash 1.5s infinite;
+}
+
+@keyframes motionFlash {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Joint rotation */
+.joint-rotate {
+  animation: jointRotate 2s infinite;
+  transform-origin: center;
+}
+
+@keyframes jointRotate {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
+}
+
+/* Data flow animation */
+.flow-animation {
+  animation: flowData 2s infinite linear;
+}
+
+@keyframes flowData {
+  0% {
+    stroke-dashoffset: 8;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+}
+
+.joint-rotate {
+  animation: jointRotate 3s ease-in-out infinite;
+  transform-origin: center;
+}

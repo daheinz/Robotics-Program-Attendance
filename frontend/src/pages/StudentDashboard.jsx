@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { kioskApi, contactApi, attendanceApi, absenceApi } from '../services/api';
+import RoboticsIllustration from '../components/RoboticsIllustration';
 import './StudentDashboard.css';
 
 function StudentDashboard({ userName, userId, userRole, onLogout }) {
@@ -222,9 +224,17 @@ function StudentDashboard({ userName, userId, userRole, onLogout }) {
 
   return (
     <div className="student-dashboard">
-      <div className="student-container">
-        <h1>Welcome, {userName}!</h1>
-
+      <header className="dashboard-header">
+        <div className="header-content">
+          <div className="robot-mascot">
+            <RoboticsIllustration />
+          </div>
+          <div className="header-text">
+            <h1>Robotics Attendance</h1>
+            <p className="tagline">Welcome back, {userName}!</p>
+          </div>
+        </div>
+        
         <nav className="student-nav">
           <button
             className={`nav-tab ${activeTab === 'dashboard' ? 'active' : ''}`}
@@ -251,26 +261,41 @@ function StudentDashboard({ userName, userId, userRole, onLogout }) {
             Absence History
           </button>
         </nav>
+        
+        <div className="header-actions">
+          {userRole && userRole !== 'student' && (
+            <Link className="admin-btn" to="/admin">
+              Admin
+            </Link>
+          )}
+          <button className="logout-btn" onClick={onLogout}>
+            Logout
+          </button>
+        </div>
+      </header>
 
+      <div className="student-container">
         {error && <div className="alert alert-error">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
 
         {activeTab === 'dashboard' && (
           <div className="dashboard-section">
             <div className="status-card">
+              <div className="user-identity">
+                <span className="user-name">{userName}</span>
+                <span className="user-role-badge">{userRole}</span>
+              </div>
+              
               <div className="status-indicator">
                 <div className={`status-dot ${checkedIn ? 'checked-in' : 'checked-out'}`}></div>
                 <p className="status-text">
-                  {checkedIn ? 'Currently Checked In' : 'Currently Checked Out'}
+                  {checkedIn ? (
+                    currentSession ? 
+                      `Currently Checked In at ${new Date(currentSession.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` 
+                      : 'Currently Checked In'
+                  ) : 'Currently Checked Out'}
                 </p>
               </div>
-
-              {checkedIn && currentSession && (
-                <p className="session-info">
-                  Checked in at{' '}
-                  {new Date(currentSession.check_in_time).toLocaleTimeString()}
-                </p>
-              )}
             </div>
 
             {!checkedIn ? (
@@ -283,17 +308,23 @@ function StudentDashboard({ userName, userId, userRole, onLogout }) {
               </button>
             ) : (
               <div className="checkout-section">
-                <div className="form-group">
-                  <label>
-                    {reflectionPrompt}
-                    {userRole !== 'student' && <span className="optional-label">(Optional for mentors/coaches)</span>}
-                  </label>
+                <div className="reflection-container">
+                  <div className="reflection-header">
+                    <label className="reflection-label">
+                      {reflectionPrompt}
+                    </label>
+                    {userRole === 'student' ? (
+                      <span className="required-badge">REQUIRED</span>
+                    ) : (
+                      <span className="optional-badge">OPTIONAL</span>
+                    )}
+                  </div>
                   <textarea
                     className="reflection-textarea"
                     value={reflection}
                     onChange={(e) => setReflection(e.target.value)}
                     rows="5"
-                    placeholder={userRole === 'student' ? 'Enter your reflection...' : 'Enter your reflection (optional)...'}
+                    placeholder={userRole === 'student' ? 'Enter your reflection to check out...' : 'Enter your reflection (optional)...'}
                   />
                 </div>
                 <button

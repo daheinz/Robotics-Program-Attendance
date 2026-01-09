@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { kioskApi } from '../services/api';
 import api from '../services/api';
+import RoboticsIllustration from '../components/RoboticsIllustration';
 import './KioskPage.css';
 
 function KioskPage({ onAuth }) {
@@ -108,71 +109,86 @@ function KioskPage({ onAuth }) {
   return (
     <div className="kiosk-page">
       <header className="kiosk-header">
-        <h1>Robotics Attendance Kiosk</h1>
-        <a href="/presenceboard" className="presenceboard-link" style={{ color: '#4fd1c5', fontWeight: 'bold', fontSize: '1.1rem', marginLeft: '1.5rem', textDecoration: 'underline' }}>
-          View Presence Board
+        <div className="header-content">
+          <div className="robot-mascot">
+            <RoboticsIllustration />
+          </div>
+          <div className="header-text">
+            <h1>Robotics Attendance</h1>
+            <p className="tagline">Welcome to the program!</p>
+          </div>
+        </div>
+        <a href="/presenceboard" className="presenceboard-link">
+          📊 Presence Board
         </a>
       </header>
 
       {error && <div className="error-message">{error}</div>}
 
       {mode === 'select' && (
-        <div className="user-selection">
-          <p className="instruction">Select your name to continue</p>
-          <input
-            type="text"
-            className="search-box"
-            placeholder="Search by alias..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {students.length > 0 && (
-            <>
-              <h3 className="user-group-heading">Students</h3>
-              <div className="user-grid">
-                {students.map((user) => {
-                  const userStatus = userStatuses[user.id];
-                  const isCheckedIn = userStatus?.status === 'checked-in';
-                  return (
-                    <button
-                      key={user.id}
-                      className={`user-button student ${isCheckedIn ? 'checked-in' : 'not-checked-in'}`}
-                      onClick={() => handleUserSelect(user)}
-                    >
-                      <div className="user-button-name">{user.alias}</div>
-                      {isCheckedIn && userStatus.checkInTime && (
-                        <div className="user-button-duration">{formatOnsiteDuration(userStatus.checkInTime)}</div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-          {mentorsCoaches.length > 0 && (
-            <>
-              <h3 className="user-group-heading">Mentors & Coaches</h3>
-              <div className="user-grid">
-                {mentorsCoaches.map((user) => {
-                  const userStatus = userStatuses[user.id];
-                  const isCheckedIn = userStatus?.status === 'checked-in';
-                  return (
-                    <button
-                      key={user.id}
-                      className={`user-button mentor-coach ${isCheckedIn ? 'checked-in' : 'not-checked-in'}`}
-                      onClick={() => handleUserSelect(user)}
-                    >
-                      <div className="user-button-name">{user.alias}</div>
-                      {isCheckedIn && userStatus.checkInTime && (
-                        <div className="user-button-duration">{formatOnsiteDuration(userStatus.checkInTime)}</div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
+        <>
+          <div className="search-container">
+            <p className="instruction">Select your name to continue</p>
+            <input
+              type="text"
+              className="search-box"
+              placeholder="Search by alias..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="users-container">
+            <div className="user-selection">
+              {students.length > 0 && (
+                <>
+                  <h3 className="user-group-heading">Students</h3>
+                  <div className="user-grid">
+                    {students.map((user) => {
+                      const userStatus = userStatuses[user.id];
+                      const isCheckedIn = userStatus?.status === 'checked-in';
+                      return (
+                        <button
+                          key={user.id}
+                          className={`user-button student ${isCheckedIn ? 'checked-in' : 'not-checked-in'}`}
+                          onClick={() => handleUserSelect(user)}
+                        >
+                          <div className="user-button-name">{user.alias}</div>
+                          {isCheckedIn && userStatus.checkInTime && (
+                            <div className="user-button-duration">{formatOnsiteDuration(userStatus.checkInTime)}</div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+              {mentorsCoaches.length > 0 && (
+                <>
+                  <h3 className="user-group-heading">Mentors & Coaches</h3>
+                  <div className="user-grid">
+                    {mentorsCoaches.map((user) => {
+                      const userStatus = userStatuses[user.id];
+                      const isCheckedIn = userStatus?.status === 'checked-in';
+                      return (
+                        <button
+                          key={user.id}
+                          className={`user-button mentor-coach ${isCheckedIn ? 'checked-in' : 'not-checked-in'}`}
+                          onClick={() => handleUserSelect(user)}
+                        >
+                          <div className="user-button-name">{user.alias}</div>
+                          {isCheckedIn && userStatus.checkInTime && (
+                            <div className="user-button-duration">{formatOnsiteDuration(userStatus.checkInTime)}</div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </>
       )}
 
       {mode === 'pin-entry' && (
