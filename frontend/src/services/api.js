@@ -9,6 +9,22 @@ const api = axios.create({
   },
 });
 
+// Global 401 handler: clear session and redirect to login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      try {
+        localStorage.clear();
+      } catch (_) {
+        // ignore storage errors
+      }
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Kiosk endpoints
 export const kioskApi = {
   getUsers: () => api.get('/kiosk/users'),
@@ -41,6 +57,7 @@ export const attendanceApi = {
   adminCreate: (data) => api.post('/attendance/admin', data),
   adminUpdate: (sessionId, data) => api.patch(`/attendance/${sessionId}/admin`, data),
   adminDelete: (sessionId, auditReason) => api.delete(`/attendance/${sessionId}`, { data: { auditReason } }),
+  getMyHistory: () => api.get('/attendance/me/history'),
   getTimeline: (date) => api.get('/attendance/timeline', { params: { date } }),
   // Pass client timezone offset to ensure correct local-day window on server
   getTimelineWithTz: (date) => 
@@ -63,6 +80,11 @@ export const attendanceApi = {
       params: { start_date: startDate, end_date: endDate },
       responseType: 'blob',
     }),
+};
+
+// Absence endpoints
+export const absenceApi = {
+  getMine: (startDate, endDate) => api.get('/absences/me', { params: { startDate, endDate } }),
 };
 
 // Contact endpoints

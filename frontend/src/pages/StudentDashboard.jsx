@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { kioskApi, contactApi, attendanceApi } from '../services/api';
+import { kioskApi, contactApi, attendanceApi, absenceApi } from '../services/api';
 import './StudentDashboard.css';
 
-function StudentDashboard({ userName, userId, onLogout }) {
+function StudentDashboard({ userName, userId, userRole, onLogout }) {
   const [checkedIn, setCheckedIn] = useState(false);
   const [currentSession, setCurrentSession] = useState(null);
   const [contacts, setContacts] = useState([]);
@@ -11,7 +11,7 @@ function StudentDashboard({ userName, userId, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'contacts'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'contacts', 'attendance', 'absences'
   const [editingContact, setEditingContact] = useState(null);
   const [showAddContact, setShowAddContact] = useState(false);
   const [contactFormData, setContactFormData] = useState({
@@ -19,11 +19,16 @@ function StudentDashboard({ userName, userId, onLogout }) {
     phoneNumber: '',
     relationship: '',
   });
+  const [attendanceHistory, setAttendanceHistory] = useState([]);
+  const [absenceHistory, setAbsenceHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     checkInStatus();
     loadContacts();
     loadReflectionPrompt();
+    loadAttendanceHistory();
+    loadAbsenceHistory();
   }, [userId]);
 
   const checkInStatus = async () => {
@@ -51,6 +56,50 @@ function StudentDashboard({ userName, userId, onLogout }) {
       setReflectionPrompt(response.data.prompt);
     } catch (err) {
       console.error('Failed to load reflection prompt');
+    }
+  };
+
+  const loadAttendanceHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      const response = await attendanceApi.getMyHistory();
+      const sessions = response.data.sessions || [];
+      sessions.sort((a, b) => new Date(b.check_in_time) - new Date(a.check_in_time));
+      setAttendanceHistory(sessions);
+    } catch (err) {
+      console.error('Failed to load attendance history');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const formatDateTimeCompact = (dt) => {
+    if (!dt) return '—';
+    const d = new Date(dt);
+    if (Number.isNaN(d.valueOf())) return dt;
+    const opts = { month: '2-digit', day: '2-digit', year: '2-digit', hour: 'numeric', minute: '2-digit', hour12: true };
+    return d.toLocaleString('en-US', opts);
+  };
+
+  const formatDateCompact = (dt) => {
+    if (!dt) return '—';
+    const d = new Date(dt);
+    if (Number.isNaN(d.valueOf())) return dt;
+    const opts = { month: '2-digit', day: '2-digit', year: '2-digit' };
+    return d.toLocaleDateString('en-US', opts);
+  };
+
+  const loadAbsenceHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      const response = await absenceApi.getMine();
+      const absences = response.data.absences || [];
+      absences.sort((a, b) => new Date(b.absence_date) - new Date(a.absence_date));
+      setAbsenceHistory(absences);
+    } catch (err) {
+      console.error('Failed to load absence history');
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -187,6 +236,18 @@ function StudentDashboard({ userName, userId, onLogout }) {
             onClick={() => setActiveTab('contacts')}
           >
             My Contacts
+          </button>
+          <button
+            className={`nav-tab ${activeTab === 'attendance' ? 'active' : ''}`}
+            onClick={() => setActiveTab('attendance')}
+          >
+            Attendance History
+          </button>
+          <button
+            className={`nav-tab ${activeTab === 'absences' ? 'active' : ''}`}
+            onClick={() => setActiveTab('absences')}
+          >
+            Absence History
           </button>
         </nav>
 
@@ -364,6 +425,69 @@ function StudentDashboard({ userName, userId, onLogout }) {
               >
                 + Add Another Contact
               </button>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'attendance' && (
+          <div className="history-section">
+            <h2>Your Attendance History</h2>
+            {historyLoading ? (
+              <div className="loading">Loading history...</div>
+            ) : attendanceHistory.length === 0 ? (
+              <p>No attendance records found.</p>
+            ) : (
+              <table className="history-table">
+                <thead>
+                  <tr>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Minutes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendanceHistory.map((session) => {
+                    const minutes = session.duration_minutes || (session.check_out_time && session.check_in_time ? Math.round((new Date(session.check_out_time) - new Date(session.check_in_time)) / 60000) : '');
+                    return (
+                      <tr key={session.id}>
+                        <td>{formatDateTimeCompact(session.check_in_time)}</td>
+                        <td>{session.check_out_time ? formatDateTimeCompact(session.check_out_time) : '—'}</td>
+                        <td>{minutes !== '' ? minutes : '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'absences' && (
+          <div className="history-section">
+            <h2>Your Absence History</h2>
+            {historyLoading ? (
+              <div className="loading">Loading history...</div>
+            ) : absenceHistory.length === 0 ? (
+              <p>No absences found.</p>
+            ) : (
+              <table className="history-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {absenceHistory.map((abs) => (
+                    <tr key={abs.id}>
+                      <td>{formatDateCompact(abs.absence_date)}</td>
+                      <td>{abs.status}</td>
+                      <td>{abs.notes || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         )}

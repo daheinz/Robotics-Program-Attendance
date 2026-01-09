@@ -70,6 +70,9 @@ router.post('/check-out', requireAuth, validateCheckOut, handleValidationErrors,
 // GET /attendance/me - Get current user's attendance status
 router.get('/me', requireAuth, AttendanceController.getCurrentUserStatus);
 
+// GET /attendance/me/history - Get current user's attendance history
+router.get('/me/history', requireAuth, AttendanceController.getMyHistory);
+
 // GET /attendance/timeline?date=YYYY-MM-DD - Get timeline data (public, no auth required)
 router.get('/timeline', validateDate, handleValidationErrors, AttendanceController.getTimeline);
 

@@ -118,11 +118,7 @@ function AppContent() {
               <Route
                 path="/"
                 element={
-                  userRole === 'student' ? (
-                    <StudentDashboard userName={userName} userId={userId} onLogout={handleLogout} />
-                  ) : (
-                    <MentorCoachDashboard userName={userName} userId={userId} userRole={userRole} onLogout={handleLogout} />
-                  )
+                  <StudentDashboard userName={userName} userId={userId} userRole={userRole} onLogout={handleLogout} />
                 }
               />
               <Route path="/admin" element={<AdminDashboard />} />

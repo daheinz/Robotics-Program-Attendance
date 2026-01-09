@@ -123,6 +123,18 @@ class AttendanceController {
     }
   }
 
+  // GET /attendance/me/history - Authenticated user's attendance history
+  static async getMyHistory(req, res) {
+    try {
+      const userId = req.user.id;
+      const sessions = await AttendanceSession.getSessionsWithReflections(userId);
+      res.json({ sessions });
+    } catch (error) {
+      console.error('Error fetching personal attendance history:', error);
+      res.status(500).json({ error: 'Failed to fetch attendance history' });
+    }
+  }
+
   // POST /attendance - Manually create an attendance session
   static async createManual(req, res) {
     try {

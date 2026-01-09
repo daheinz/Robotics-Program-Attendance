@@ -1,6 +1,6 @@
 const express = require('express');
 const absenceController = require('../controllers/absenceController');
-const { requireMentorOrCoach } = require('../middleware/auth');
+const { requireMentorOrCoach, requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -10,6 +10,9 @@ router.get('/public/by-date', absenceController.getAbsencesForDatePublic);
 
 // GET /api/absences/public/status/:studentId/:date - Get core hours compliance status
 router.get('/public/status/:studentId/:date', absenceController.getCoreHoursStatus);
+
+// Authenticated student: get own absences (optional startDate/endDate)
+router.get('/me', requireAuth, absenceController.getMyAbsences);
 
 // Remaining routes require authentication and mentor/coach role
 router.use(requireMentorOrCoach);

@@ -9,6 +9,49 @@
   margin: 0 auto;
 }
 
+/* Expand width a bit for tables on history tabs */
+.history-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  margin-top: 1rem;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  background: #fff;
+}
+
+.history-table th,
+.history-table td {
+  border: 1px solid #e0e0e0;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.history-table th {
+  background: #f3f6fb;
+  font-weight: 600;
+  color: #333;
+}
+
+.history-table tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.history-table tr:nth-child(odd) {
+  background: #ffffff;
+}
+
+.history-section h2 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
 .student-dashboard h1 {
   color: white;
   text-align: center;

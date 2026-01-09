@@ -65,6 +65,20 @@ exports.getAbsencesForDatePublic = async (req, res, next) => {
   }
 };
 
+// Authenticated student: get own absences (defaults to last 90 days if no range provided)
+exports.getMyAbsences = async (req, res, next) => {
+  try {
+    const studentId = req.user.id;
+    const today = new Date();
+    const endDate = req.query.endDate || today.toISOString().slice(0, 10);
+    const startDate = req.query.startDate || new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const absences = await Absence.findByStudentAndDateRange(studentId, startDate, endDate);
+    res.json({ absences, startDate, endDate });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get absence by ID
 exports.getAbsenceById = async (req, res, next) => {
   try {
