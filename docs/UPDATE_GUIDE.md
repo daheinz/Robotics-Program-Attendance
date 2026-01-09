@@ -44,7 +44,8 @@ sudo systemctl status rob-attendance-backend
 git log --oneline -1
 
 # Optional: backup database
-sudo -u postgres pg_dump attendance > ~/attendance_backup_$(date +%Y%m%d_%H%M%S).sql
+DATE=$(date +%Y%m%d_%H%M%S)
+sudo -u postgres pg_dump attendance | gzip | sudo tee "$HOME/attendance_backup_$DATE.sql.gz" > /dev/null
 ```
 
 ### 5. Pull Latest Changes
@@ -179,7 +180,8 @@ node scripts/migrate.js
 cd /var/www/RoboticsAttendance/backend
 
 # Backup first
-sudo -u postgres pg_dump attendance > ~/attendance_backup_before_schema_update.sql
+DATE=$(date +%Y%m%d_%H%M%S)
+sudo -u postgres pg_dump attendance | gzip | sudo tee "$HOME/attendance_backup_before_schema_$DATE.sql.gz" > /dev/null
 
 # Reinitialize
 node scripts/initDatabase.js

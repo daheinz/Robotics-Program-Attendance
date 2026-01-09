@@ -171,8 +171,8 @@ function UsersTab({ userRole }) {
   };
 
   const handleDeleteUser = async (userId) => {
-    if (userRole !== 'coach') {
-      setError('Only coaches can delete users');
+    if (!(userRole === 'coach' || userRole === 'mentor')) {
+      setError('Only mentors or coaches can delete users');
       return;
     }
     if (window.confirm('Are you sure you want to delete this user?')) {
@@ -327,6 +327,15 @@ function UsersTab({ userRole }) {
               <button type="submit" className="btn btn-success">
                 {editingUser ? 'Save Changes' : 'Create User'}
               </button>
+              {editingUser && (userRole === 'coach' || userRole === 'mentor') && (
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => handleDeleteUser(editingUser.id)}
+                >
+                  Delete User
+                </button>
+              )}
               <button type="button" className="btn btn-secondary" onClick={cancelEdit}>
                 Cancel
               </button>
@@ -373,21 +382,23 @@ function UsersTab({ userRole }) {
                     <button className="btn btn-sm btn-info" onClick={() => startEdit(user)}>
                       Edit
                     </button>
+                    {/* Reset PIN remains coach-only */}
                     {userRole === 'coach' && (
-                      <>
-                        <button
-                          className="btn btn-sm btn-warning"
-                          onClick={() => handleResetPin(user.id)}
-                        >
-                          Reset PIN
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDeleteUser(user.id)}
-                        >
-                          Delete
-                        </button>
-                      </>
+                      <button
+                        className="btn btn-sm btn-warning"
+                        onClick={() => handleResetPin(user.id)}
+                      >
+                        Reset PIN
+                      </button>
+                    )}
+                    {/* Delete allowed for mentor or coach */}
+                    {(userRole === 'coach' || userRole === 'mentor') && (
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleDeleteUser(user.id)}
+                      >
+                        Delete
+                      </button>
                     )}
                   </td>
                 </tr>

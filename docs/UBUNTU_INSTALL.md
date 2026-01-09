@@ -587,10 +587,14 @@ sudo tail -f /var/log/postgresql/postgresql-*.log
 
 ```bash
 # Create backup
-sudo -u postgres pg_dump attendance > attendance_backup_$(date +%Y%m%d).sql
+DATE=$(date +%Y%m%d_%H%M%S)
+sudo -u postgres pg_dump attendance | gzip | sudo tee "$HOME/attendance_backup_$DATE.sql.gz" > /dev/null
 
-# Restore from backup
-sudo -u postgres psql attendance < attendance_backup_20260105.sql
+# Restore from backup (gzipped)
+gunzip < attendance_backup_YYYYMMDD_HHMMSS.sql.gz | sudo -u postgres psql attendance
+
+# Or if uncompressed backup
+sudo -u postgres psql attendance < attendance_backup_YYYYMMDD.sql
 ```
 
 ### Service Management

@@ -53,7 +53,7 @@ sudo mkdir -p /opt/backups
 
 # Create timestamped backup
 DATE=$(date +%Y%m%d_%H%M%S)
-sudo -u postgres pg_dump robotics_attendance | gzip > "/opt/backups/robotics_attendance_pre_update_$DATE.sql.gz"
+sudo -u postgres pg_dump robotics_attendance | gzip | sudo tee "/opt/backups/robotics_attendance_pre_update_$DATE.sql.gz" > /dev/null
 
 # Verify backup was created
 ls -lh /opt/backups/
@@ -68,14 +68,14 @@ ls -lh /opt/backups/
 
 ```bash
 # Stop backend service
-sudo systemctl stop robotics-backend.service
+sudo sudo systemctl stop rob-attendance-backend.service
 
 # Stop frontend service (if running)
-sudo systemctl stop robotics-frontend.service
+sudo systemctl stop rob-attendance-backend.service
 
 # Verify services stopped
-sudo systemctl status robotics-backend.service
-sudo systemctl status robotics-frontend.service
+sudo systemctl status rob-attendance-backend.service
+sudo systemctl status rob-attendance-frontend.service
 ```
 
 ### Step 4: Navigate to Project Directory
@@ -627,7 +627,8 @@ sudo ss -tlnp | grep -E ':(3000|5173|80|443)'
 curl http://localhost:3000/api/core-hours
 
 # Backup database
-sudo -u postgres pg_dump robotics_attendance | gzip > backup_$(date +%Y%m%d).sql.gz
+DATE=$(date +%Y%m%d_%H%M%S)
+sudo -u postgres pg_dump robotics_attendance | gzip | sudo tee "$HOME/robotics_attendance_backup_$DATE.sql.gz" > /dev/null
 
 # Restore database
 gunzip < backup.sql.gz | sudo -u postgres psql robotics_attendance

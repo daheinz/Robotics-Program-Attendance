@@ -61,7 +61,7 @@ router.patch('/:id/alias', requireMentorOrCoach, validateUserId, validateUpdateA
 // PATCH /users/:id/pin - Update user PIN (coach or mentor)
 router.patch('/:id/pin', requireMentorOrCoach, validateUserId, validateUpdatePin, handleValidationErrors, UserController.updatePin);
 
-// DELETE /users/:id - Soft delete user
-router.delete('/:id', requireCoach, validateUserId, handleValidationErrors, UserController.delete);
+// DELETE /users/:id - Soft delete user (mentor or coach)
+router.delete('/:id', requireMentorOrCoach, validateUserId, handleValidationErrors, UserController.delete);
 
 module.exports = router;
