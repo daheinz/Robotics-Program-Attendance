@@ -5,6 +5,12 @@ const DEFAULTS = {
   reflectionPrompt: 'Please reflect on what you learned or accomplished today.',
   presenceStartHour: 8,
   presenceEndHour: 24,
+  colorStudentCheckedIn: '#48bb78',
+  colorMentorCheckedIn: '#4299e1',
+  colorNotCheckedIn: '#a0aec0',
+  colorPastSession: '#4fd1c5',
+  colorActiveSession: '#f6e05e',
+  colorCurrentTime: '#ff6b6b'
 };
 
 class SystemSettings {
@@ -14,6 +20,12 @@ class SystemSettings {
       reflection_prompt: row.reflection_prompt ?? DEFAULTS.reflectionPrompt,
       presence_start_hour: row.presence_start_hour ?? DEFAULTS.presenceStartHour,
       presence_end_hour: row.presence_end_hour ?? DEFAULTS.presenceEndHour,
+      color_student_checked_in: row.color_student_checked_in ?? DEFAULTS.colorStudentCheckedIn,
+      color_mentor_checked_in: row.color_mentor_checked_in ?? DEFAULTS.colorMentorCheckedIn,
+      color_not_checked_in: row.color_not_checked_in ?? DEFAULTS.colorNotCheckedIn,
+      color_past_session: row.color_past_session ?? DEFAULTS.colorPastSession,
+      color_active_session: row.color_active_session ?? DEFAULTS.colorActiveSession,
+      color_current_time: row.color_current_time ?? DEFAULTS.colorCurrentTime,
     };
   }
 
@@ -29,38 +41,76 @@ class SystemSettings {
     return this.withDefaults(result.rows[0]);
   }
 
-  static async create(reflectionPrompt, presenceStartHour = DEFAULTS.presenceStartHour, presenceEndHour = DEFAULTS.presenceEndHour) {
+  static async create(reflectionPrompt, presenceStartHour = DEFAULTS.presenceStartHour, presenceEndHour = DEFAULTS.presenceEndHour, colors = {}) {
     const id = uuidv4();
     
     const query = `
-      INSERT INTO system_settings (id, reflection_prompt, presence_start_hour, presence_end_hour)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO system_settings (
+        id, reflection_prompt, presence_start_hour, presence_end_hour,
+        color_student_checked_in, color_mentor_checked_in, color_not_checked_in,
+        color_past_session, color_active_session, color_current_time
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `;
     
-    const values = [id, reflectionPrompt, presenceStartHour, presenceEndHour];
+    const values = [
+      id,
+      reflectionPrompt,
+      presenceStartHour,
+      presenceEndHour,
+      colors.colorStudentCheckedIn ?? DEFAULTS.colorStudentCheckedIn,
+      colors.colorMentorCheckedIn ?? DEFAULTS.colorMentorCheckedIn,
+      colors.colorNotCheckedIn ?? DEFAULTS.colorNotCheckedIn,
+      colors.colorPastSession ?? DEFAULTS.colorPastSession,
+      colors.colorActiveSession ?? DEFAULTS.colorActiveSession,
+      colors.colorCurrentTime ?? DEFAULTS.colorCurrentTime
+    ];
     const result = await db.query(query, values);
     return this.withDefaults(result.rows[0]);
   }
 
-  static async update({ reflectionPrompt, presenceStartHour, presenceEndHour }) {
+  static async update({ reflectionPrompt, presenceStartHour, presenceEndHour, colorStudentCheckedIn, colorMentorCheckedIn, colorNotCheckedIn, colorPastSession, colorActiveSession, colorCurrentTime }) {
     // Get current settings
     const current = await this.get();
     const nextReflectionPrompt = reflectionPrompt ?? current.reflection_prompt;
     const nextStartHour = presenceStartHour ?? current.presence_start_hour;
     const nextEndHour = presenceEndHour ?? current.presence_end_hour;
+    const nextColorStudentCheckedIn = colorStudentCheckedIn ?? current.color_student_checked_in;
+    const nextColorMentorCheckedIn = colorMentorCheckedIn ?? current.color_mentor_checked_in;
+    const nextColorNotCheckedIn = colorNotCheckedIn ?? current.color_not_checked_in;
+    const nextColorPastSession = colorPastSession ?? current.color_past_session;
+    const nextColorActiveSession = colorActiveSession ?? current.color_active_session;
+    const nextColorCurrentTime = colorCurrentTime ?? current.color_current_time;
     
     const query = `
       UPDATE system_settings 
       SET reflection_prompt = $1,
           presence_start_hour = $2,
           presence_end_hour = $3,
+          color_student_checked_in = $4,
+          color_mentor_checked_in = $5,
+          color_not_checked_in = $6,
+          color_past_session = $7,
+          color_active_session = $8,
+          color_current_time = $9,
           updated_at = CURRENT_TIMESTAMP
-      WHERE id = $4
+      WHERE id = $10
       RETURNING *
     `;
     
-    const result = await db.query(query, [nextReflectionPrompt, nextStartHour, nextEndHour, current.id]);
+    const result = await db.query(query, [
+      nextReflectionPrompt,
+      nextStartHour,
+      nextEndHour,
+      nextColorStudentCheckedIn,
+      nextColorMentorCheckedIn,
+      nextColorNotCheckedIn,
+      nextColorPastSession,
+      nextColorActiveSession,
+      nextColorCurrentTime,
+      current.id
+    ]);
     return this.withDefaults(result.rows[0]);
   }
 }

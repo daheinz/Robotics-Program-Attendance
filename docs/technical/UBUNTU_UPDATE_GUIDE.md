@@ -154,6 +154,35 @@ Creating indexes...
 
 **Note**: If you see "table already exists" errors, the migration already ran.
 
+#### Run Database Migration for Presence Timeline Window
+
+Adds configurable timeline start/end hours to `system_settings`.
+
+```bash
+cd backend
+sudo -u postgres node scripts/addPresenceHours.js
+```
+
+**Expected Output**:
+```
+Adding presence window columns to system_settings...
+✓ Presence window columns added/verified successfully
+```
+
+#### Run Database Migration for Presence Board Colors
+
+Adds customizable color settings to `system_settings` for Presence Board UI.
+
+```bash
+sudo -u postgres node scripts/addPresenceColors.js
+```
+
+**Expected Output**:
+```
+Adding presence board color columns to system_settings...
+✓ Presence board color columns added successfully
+```
+
 ### Step 9: Verify Database Tables
 
 ```bash
@@ -352,6 +381,8 @@ sudo systemctl restart robotics-backend.service
 ```bash
 cd /opt/Robotics-Program-Attendance/backend
 sudo -u postgres node scripts/createAbsenceTables.js
+sudo -u postgres node scripts/addPresenceHours.js
+sudo -u postgres node scripts/addPresenceColors.js
 ```
 
 **Common issues**:

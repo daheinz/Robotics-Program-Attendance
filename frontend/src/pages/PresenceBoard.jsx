@@ -12,6 +12,7 @@ function getHourOffset(date) {
 function PresenceBoard() {
   const [sessions, setSessions] = useState([]);
   const [absences, setAbsences] = useState({});
+  const [coreHoursStatus, setCoreHoursStatus] = useState({}); // { studentId: 'compliant'|'excused_absent'|'unexcused_absent' }
   const [coreHours, setCoreHours] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +20,14 @@ function PresenceBoard() {
   const [now, setNow] = useState(new Date());
   const [seasonType, setSeasonType] = useState('build');
   const [timelineWindow, setTimelineWindow] = useState({ min: 8, max: 24 });
+  const [colors, setColors] = useState({
+    studentCheckedIn: '#48bb78',
+    mentorCheckedIn: '#4299e1',
+    notCheckedIn: '#a0aec0',
+    pastSession: '#4fd1c5',
+    activeSession: '#f6e05e',
+    currentTime: '#ff6b6b'
+  });
 
   useEffect(() => {
     loadSessions();
@@ -33,6 +42,13 @@ function PresenceBoard() {
     return () => clearInterval(interval);
   }, [seasonType]);
 
+  // Load core hours status after students are loaded
+  useEffect(() => {
+    if (students.length > 0) {
+      loadCoreHoursStatus();
+    }
+  }, [students]);
+
   const loadSettings = async () => {
     try {
       const res = await settingsApi.getPublic();
@@ -43,6 +59,17 @@ function PresenceBoard() {
       } else {
         console.warn('[PresenceBoard] Invalid settings payload, using defaults');
         setTimelineWindow({ min: 8, max: 24 });
+      }
+      // Load colors
+      if (res.data) {
+        setColors({
+          studentCheckedIn: res.data.color_student_checked_in || '#48bb78',
+          mentorCheckedIn: res.data.color_mentor_checked_in || '#4299e1',
+          notCheckedIn: res.data.color_not_checked_in || '#a0aec0',
+          pastSession: res.data.color_past_session || '#4fd1c5',
+          activeSession: res.data.color_active_session || '#f6e05e',
+          currentTime: res.data.color_current_time || '#ff6b6b'
+        });
       }
     } catch (err) {
       console.warn('Failed to load settings, using defaults:', err);
@@ -86,6 +113,33 @@ function PresenceBoard() {
       setAbsences(absenceMap);
     } catch (err) {
       console.error('Failed to load absences:', err);
+    }
+  };
+
+  const loadCoreHoursStatus = async () => {
+    try {
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      
+      console.log('[PresenceBoard] Loading core hours status for', students.length, 'students on', dateStr);
+      
+      // Fetch status for all students
+      const statusMap = {};
+      for (const student of students) {
+        try {
+          const response = await api.get(`/absences/public/status/${student.id}/${dateStr}`);
+          statusMap[student.id] = response.data.status;
+          console.log(`[PresenceBoard] ${student.alias}: ${response.data.status}`);
+        } catch (err) {
+          // Default to compliant if error
+          statusMap[student.id] = 'compliant';
+          console.warn(`[PresenceBoard] Error loading status for ${student.alias}:`, err.message);
+        }
+      }
+      setCoreHoursStatus(statusMap);
+      console.log('[PresenceBoard] Core hours status loaded:', statusMap);
+    } catch (err) {
+      console.error('Failed to load core hours status:', err);
     }
   };
 
@@ -194,7 +248,14 @@ function PresenceBoard() {
   const todaysCoreHours = coreHours.filter(ch => ch.day_of_week === dayOfWeek);
 
   return (
-    <div className="presence-board">
+    <div className="presence-board" style={{
+      '--color-student-checked-in': colors.studentCheckedIn,
+      '--color-mentor-checked-in': colors.mentorCheckedIn,
+      '--color-not-checked-in': colors.notCheckedIn,
+      '--color-past-session': colors.pastSession,
+      '--color-active-session': colors.activeSession,
+      '--color-current-time': colors.currentTime
+    }}>
       <header className="board-header">
         <h1>Presence Timeline <span className="update-time">(Last updated: {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })})</span></h1>
         <a href="/kiosk" className="kiosk-link">
@@ -306,10 +367,9 @@ function PresenceBoard() {
             const isExcusedAbsent = absence && absence.status === 'approved';
             const hasSession = user.sessions.length > 0;
             return (
-              <div className={`timeline-row${isExcusedAbsent ? ' excused-absent' : ''}`} key={`A-${userId}`}>
-                <div className={`timeline-label user-label ${hasSession ? 'mentor-coach-checked-in' : 'not-checked-in'}${isExcusedAbsent ? ' excused-label' : ''}`}>
+              <div className={`timeline-row`} key={`A-${userId}`}>
+                <div className={`timeline-label user-label ${hasSession ? 'mentor-coach-checked-in' : 'not-checked-in'}`}>
                   {user.alias} {user.role === 'mentor' ? '(Mentor)' : user.role === 'coach' ? '(Coach)' : ''}
-                  {isExcusedAbsent && <span className="excused-badge">Excused Absence</span>}
                 </div>
                 <div className="timeline-bars">
                   {user.sessions.map((session, idx) => {
@@ -333,11 +393,14 @@ function PresenceBoard() {
             const absence = absences[userId];
             const isExcusedAbsent = absence && absence.status === 'approved';
             const hasSession = user.sessions.length > 0;
+            const status = coreHoursStatus[userId];
             return (
-              <div className={`timeline-row${isExcusedAbsent ? ' excused-absent' : ''}`} key={`B-${userId}`}>
-                <div className={`timeline-label user-label ${hasSession ? 'student-checked-in' : 'not-checked-in'}${isExcusedAbsent ? ' excused-label' : ''}`}>
+              <div className={`timeline-row`} key={`B-${userId}`}>
+                <div className={`timeline-label user-label ${hasSession ? 'student-checked-in' : 'not-checked-in'}`}>
                   {user.alias}
-                  {isExcusedAbsent && <span className="excused-badge">Excused Absence</span>}
+                  {status === 'compliant' && <span className="status-indicator checkmark">✓</span>}
+                  {status === 'excused_absent' && <span className="status-indicator checkmark">✓</span>}
+                  {status === 'unexcused_absent' && <span className="status-indicator unexcused">⊘</span>}
                 </div>
                 <div className="timeline-bars">
                   {user.sessions.map((session, idx) => {
@@ -360,11 +423,12 @@ function PresenceBoard() {
           {groupC.map(([userId, user]) => {
             const absence = absences[userId];
             const isExcusedAbsent = true;
+            const status = coreHoursStatus[userId];
             return (
-              <div className={`timeline-row excused-absent`} key={`C-${userId}`}>
-                <div className={`timeline-label user-label not-checked-in excused-label`}>
+              <div className={`timeline-row`} key={`C-${userId}`}>
+                <div className={`timeline-label user-label not-checked-in`}>
                   {user.alias}
-                  <span className="excused-badge">Excused Absence</span>
+                  {status === 'excused_absent' && <span className="status-indicator checkmark">✓</span>}
                 </div>
                 <div className="timeline-bars">
                   <div className="excused-bar" title={`Excused absence: ${absence?.notes || ''}`}></div>
@@ -377,11 +441,13 @@ function PresenceBoard() {
           {groupD.map(([userId, user]) => {
             const absence = absences[userId];
             const isUnexcused = !!absence && absence.status !== 'approved';
+            const status = coreHoursStatus[userId];
             return (
               <div className={`timeline-row`} key={`D-${userId}`}>
                 <div className={`timeline-label user-label not-checked-in`}>
                   {user.alias}
-                  {isUnexcused && <span className="excused-badge" style={{ background: '#f6ad55', color: '#222' }}>Unexcused Absence</span>}
+                  {status === 'compliant' && <span className="status-indicator checkmark">✓</span>}
+                  {status === 'unexcused_absent' && <span className="status-indicator unexcused">⊘</span>}
                 </div>
                 <div className="timeline-bars">
                   {/* Empty bars area to indicate no sessions */}
@@ -395,23 +461,19 @@ function PresenceBoard() {
         <div className="timeline-legend">
           <strong>Legend</strong>
           <div className="legend-item">
-            <span className="legend-color" style={{ background: '#4fd1c5' }}></span>
+            <span className="legend-color" style={{ background: colors.pastSession }}></span>
             <span>Past presence</span>
           </div>
           <div className="legend-item">
-            <span className="legend-color" style={{ background: '#f6e05e' }}></span>
+            <span className="legend-color" style={{ background: colors.activeSession }}></span>
             <span>Still on site</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color" style={{ background: '#90ee90' }}></span>
-            <span>Excused Absence</span>
           </div>
           <div className="legend-item">
             <span className="legend-color" style={{ background: 'rgba(100, 150, 255, 0.3)', border: '1px solid rgba(100, 150, 255, 0.5)' }}></span>
             <span>Required Practice</span>
           </div>
           <div className="legend-item">
-            <span className="legend-color" style={{ background: '#ff6b6b', width: '3px' }}></span>
+            <span className="legend-color" style={{ background: colors.currentTime, width: '3px' }}></span>
             <span>Current time</span>
           </div>
         </div>

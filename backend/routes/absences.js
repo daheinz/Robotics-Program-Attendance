@@ -4,9 +4,12 @@ const { requireMentorOrCoach } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Public minimal-read endpoint for presence board: absences by date
+// Public endpoints (no auth required)
 // GET /api/absences/public/by-date?date=YYYY-MM-DD&seasonType=build
 router.get('/public/by-date', absenceController.getAbsencesForDatePublic);
+
+// GET /api/absences/public/status/:studentId/:date - Get core hours compliance status
+router.get('/public/status/:studentId/:date', absenceController.getCoreHoursStatus);
 
 // Remaining routes require authentication and mentor/coach role
 router.use(requireMentorOrCoach);

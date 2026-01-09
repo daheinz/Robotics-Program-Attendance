@@ -129,6 +129,22 @@ Adding presence window columns to system_settings...
 ✓ Presence window columns added/verified successfully
 ```
 
+#### Run Database Migration for Presence Board Colors (NEW)
+
+Adds customizable color settings to `system_settings` for Presence Board UI.
+
+```powershell
+# From project root
+cd backend
+node scripts/addPresenceColors.js
+```
+
+**Expected Output**:
+```
+Adding presence board color columns to system_settings...
+✓ Presence board color columns added successfully
+```
+
 ### Step 6: Verify Database Tables Created
 
 ```powershell
@@ -488,6 +504,7 @@ cd frontend && npm install && cd ..
 cd backend
 node scripts/createAbsenceTables.js
 node scripts/addPresenceHours.js
+node scripts/addPresenceColors.js
 
 # Start backend
 cd backend

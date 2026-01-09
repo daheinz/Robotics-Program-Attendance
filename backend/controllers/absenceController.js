@@ -187,6 +187,37 @@ exports.getFutureAbsences = async (req, res, next) => {
   }
 };
 
+// Check core hours compliance status for a student on a specific date
+// Returns: { status: 'compliant', 'excused_absent', or 'unexcused_absent' }
+exports.getCoreHoursStatus = async (req, res, next) => {
+  try {
+    const { studentId, date } = req.params;
+    const { seasonType = 'build' } = req.query;
+
+    console.log(`[getCoreHoursStatus] Checking status for student ${studentId} on ${date}`);
+
+    // Check if student has an absence record for this date
+    const absence = await Absence.findByStudentAndDate(studentId, date);
+    
+    if (absence) {
+      // Student has an absence record
+      console.log(`[getCoreHoursStatus] Found absence record with status: ${absence.status}`);
+      if (absence.status === 'approved') {
+        return res.json({ status: 'excused_absent' });
+      } else {
+        return res.json({ status: 'unexcused_absent' });
+      }
+    }
+
+    // No absence record, assume student met requirements
+    console.log(`[getCoreHoursStatus] No absence record found, returning compliant`);
+    res.json({ status: 'compliant' });
+  } catch (error) {
+    console.error('[getCoreHoursStatus] Error:', error);
+    next(error);
+  }
+};
+
 // Delete an absence record
 exports.deleteAbsence = async (req, res, next) => {
   try {

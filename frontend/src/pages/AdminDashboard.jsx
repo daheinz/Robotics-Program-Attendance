@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { userApi, settingsApi, contactApi, attendanceApi } from '../services/api';
+import api, { userApi, settingsApi, contactApi, attendanceApi } from '../services/api';
 import './AdminDashboard.css';
 
 function AdminDashboard() {
@@ -51,6 +51,12 @@ function AdminDashboard() {
           >
             Settings
           </button>
+          <button
+            className={`nav-tab ${activeTab === 'testing' ? 'active' : ''}`}
+            onClick={() => setActiveTab('testing')}
+          >
+            Testing
+          </button>
         </nav>
 
         <div className="dashboard-content">
@@ -59,6 +65,7 @@ function AdminDashboard() {
           {activeTab === 'attendance' && <AttendanceTab />}
           {activeTab === 'reflections' && <ReflectionsTab />}
           {activeTab === 'settings' && <SettingsTab />}
+          {activeTab === 'testing' && <TestingTab />}
         </div>
       </div>
     </div>
@@ -1073,6 +1080,12 @@ function SettingsTab() {
   const [prompt, setPrompt] = useState('');
   const [presenceStart, setPresenceStart] = useState(8);
   const [presenceEnd, setPresenceEnd] = useState(24);
+  const [colorStudentCheckedIn, setColorStudentCheckedIn] = useState('#48bb78');
+  const [colorMentorCheckedIn, setColorMentorCheckedIn] = useState('#4299e1');
+  const [colorNotCheckedIn, setColorNotCheckedIn] = useState('#a0aec0');
+  const [colorPastSession, setColorPastSession] = useState('#4fd1c5');
+  const [colorActiveSession, setColorActiveSession] = useState('#f6e05e');
+  const [colorCurrentTime, setColorCurrentTime] = useState('#ff6b6b');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -1091,6 +1104,24 @@ function SettingsTab() {
       }
       if (response.data.presence_end_hour !== undefined) {
         setPresenceEnd(response.data.presence_end_hour);
+      }
+      if (response.data.color_student_checked_in) {
+        setColorStudentCheckedIn(response.data.color_student_checked_in);
+      }
+      if (response.data.color_mentor_checked_in) {
+        setColorMentorCheckedIn(response.data.color_mentor_checked_in);
+      }
+      if (response.data.color_not_checked_in) {
+        setColorNotCheckedIn(response.data.color_not_checked_in);
+      }
+      if (response.data.color_past_session) {
+        setColorPastSession(response.data.color_past_session);
+      }
+      if (response.data.color_active_session) {
+        setColorActiveSession(response.data.color_active_session);
+      }
+      if (response.data.color_current_time) {
+        setColorCurrentTime(response.data.color_current_time);
       }
     } catch (err) {
       setError('Failed to load settings: ' + (err.response?.data?.error || err.message));
@@ -1111,6 +1142,12 @@ function SettingsTab() {
         reflectionPrompt: prompt,
         presenceStartHour: Number(presenceStart),
         presenceEndHour: Number(presenceEnd),
+        colorStudentCheckedIn,
+        colorMentorCheckedIn,
+        colorNotCheckedIn,
+        colorPastSession,
+        colorActiveSession,
+        colorCurrentTime,
       });
       alert('Settings updated successfully');
       fetchSettings();
@@ -1161,12 +1198,187 @@ function SettingsTab() {
             />
           </div>
 
+          <h3 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Presence Board Colors</h3>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+            <div className="form-group">
+              <label>Student Checked In</label>
+              <input
+                type="color"
+                value={colorStudentCheckedIn}
+                onChange={(e) => setColorStudentCheckedIn(e.target.value)}
+                style={{ width: '100%', height: '40px', cursor: 'pointer' }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Mentor/Coach Checked In</label>
+              <input
+                type="color"
+                value={colorMentorCheckedIn}
+                onChange={(e) => setColorMentorCheckedIn(e.target.value)}
+                style={{ width: '100%', height: '40px', cursor: 'pointer' }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Not Checked In</label>
+              <input
+                type="color"
+                value={colorNotCheckedIn}
+                onChange={(e) => setColorNotCheckedIn(e.target.value)}
+                style={{ width: '100%', height: '40px', cursor: 'pointer' }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Past Session Bar</label>
+              <input
+                type="color"
+                value={colorPastSession}
+                onChange={(e) => setColorPastSession(e.target.value)}
+                style={{ width: '100%', height: '40px', cursor: 'pointer' }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Active Session Bar</label>
+              <input
+                type="color"
+                value={colorActiveSession}
+                onChange={(e) => setColorActiveSession(e.target.value)}
+                style={{ width: '100%', height: '40px', cursor: 'pointer' }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Current Time Marker</label>
+              <input
+                type="color"
+                value={colorCurrentTime}
+                onChange={(e) => setColorCurrentTime(e.target.value)}
+                style={{ width: '100%', height: '40px', cursor: 'pointer' }}
+              />
+            </div>
+          </div>
+
           <div className="form-actions">
             <button type="submit" className="btn btn-success">
               Save Settings
             </button>
           </div>
         </form>
+      )}
+    </div>
+  );
+}
+
+function TestingTab() {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const triggerCoreHoursChecker = async () => {
+    setLoading(true);
+    setMessage('');
+    setError('');
+    try {
+      const response = await api.post('/admin/test-core-hours-checker', {});
+      setMessage('✓ Core hours compliance check completed successfully');
+      console.log('Response:', response.data);
+    } catch (err) {
+      setError('Failed to run core hours checker: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const triggerMidnightCheckout = async () => {
+    setLoading(true);
+    setMessage('');
+    setError('');
+    try {
+      const response = await api.post('/admin/midnight-checkout', {});
+      setMessage('✓ Midnight checkout process completed successfully');
+      console.log('Response:', response.data);
+    } catch (err) {
+      setError('Failed to run midnight checkout: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="testing-tab">
+      <h2>Testing & Diagnostics</h2>
+      <p>Manually trigger cron jobs and system tasks for testing purposes.</p>
+
+      <div className="testing-section">
+        <h3>Scheduled Tasks</h3>
+
+        <div className="testing-card">
+          <h4>Core Hours Compliance Checker</h4>
+          <p>Checks if students met core hours requirements and creates absence records for those who didn't.</p>
+          <p style={{ fontSize: '0.9rem', color: '#666' }}>
+            Runs every 15 minutes at:
+          </p>
+          <code style={{ background: '#f0f0f0', padding: '0.5rem', borderRadius: '4px', display: 'block', marginBottom: '1rem' }}>
+            */15 * * * * (every 15 minutes)
+          </code>
+          <button
+            className="btn btn-primary"
+            onClick={triggerCoreHoursChecker}
+            disabled={loading}
+            style={{ marginBottom: '1rem' }}
+          >
+            {loading ? 'Running...' : 'Run Core Hours Checker Now'}
+          </button>
+        </div>
+
+        <div className="testing-card">
+          <h4>Midnight Auto-Checkout</h4>
+          <p>Automatically checks out any users still on site after 2 AM.</p>
+          <p style={{ fontSize: '0.9rem', color: '#666' }}>
+            Runs daily at:
+          </p>
+          <code style={{ background: '#f0f0f0', padding: '0.5rem', borderRadius: '4px', display: 'block', marginBottom: '1rem' }}>
+            0 2 * * * (2:00 AM daily)
+          </code>
+          <button
+            className="btn btn-primary"
+            onClick={triggerMidnightCheckout}
+            disabled={loading}
+            style={{ marginBottom: '1rem' }}
+          >
+            {loading ? 'Running...' : 'Run Midnight Checkout Now'}
+          </button>
+        </div>
+      </div>
+
+      {message && (
+        <div style={{
+          padding: '1rem',
+          marginTop: '1rem',
+          background: '#d4edda',
+          color: '#155724',
+          border: '1px solid #c3e6cb',
+          borderRadius: '4px'
+        }}>
+          {message}
+        </div>
+      )}
+
+      {error && (
+        <div style={{
+          padding: '1rem',
+          marginTop: '1rem',
+          background: '#f8d7da',
+          color: '#721c24',
+          border: '1px solid #f5c6cb',
+          borderRadius: '4px'
+        }}>
+          {error}
+        </div>
       )}
     </div>
   );

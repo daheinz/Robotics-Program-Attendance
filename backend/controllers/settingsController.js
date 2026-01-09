@@ -20,6 +20,12 @@ class SettingsController {
       res.json({
         presence_start_hour: settings.presence_start_hour,
         presence_end_hour: settings.presence_end_hour,
+        color_student_checked_in: settings.color_student_checked_in,
+        color_mentor_checked_in: settings.color_mentor_checked_in,
+        color_not_checked_in: settings.color_not_checked_in,
+        color_past_session: settings.color_past_session,
+        color_active_session: settings.color_active_session,
+        color_current_time: settings.color_current_time,
       });
     } catch (error) {
       console.error('Error fetching public settings:', error);
@@ -30,7 +36,17 @@ class SettingsController {
   // PATCH /settings - Update system settings
   static async update(req, res) {
     try {
-      const { reflectionPrompt, presenceStartHour, presenceEndHour } = req.body;
+      const { 
+        reflectionPrompt, 
+        presenceStartHour, 
+        presenceEndHour,
+        colorStudentCheckedIn,
+        colorMentorCheckedIn,
+        colorNotCheckedIn,
+        colorPastSession,
+        colorActiveSession,
+        colorCurrentTime
+      } = req.body;
 
       // Validate window with current values to provide clearer error messages
       const current = await SystemSettings.get();
@@ -44,6 +60,12 @@ class SettingsController {
         reflectionPrompt,
         presenceStartHour,
         presenceEndHour,
+        colorStudentCheckedIn,
+        colorMentorCheckedIn,
+        colorNotCheckedIn,
+        colorPastSession,
+        colorActiveSession,
+        colorCurrentTime,
       });
 
       // Log the action
@@ -51,7 +73,17 @@ class SettingsController {
         await AuditLog.create({
           actorUserId: req.user.id,
           actionType: 'UPDATE_SETTINGS',
-          details: { reflectionPrompt, presenceStartHour, presenceEndHour },
+          details: { 
+            reflectionPrompt, 
+            presenceStartHour, 
+            presenceEndHour,
+            colorStudentCheckedIn,
+            colorMentorCheckedIn,
+            colorNotCheckedIn,
+            colorPastSession,
+            colorActiveSession,
+            colorCurrentTime
+          },
         });
       }
 

@@ -1,17 +1,37 @@
 /* Color coding for timeline labels based on check-in status */
 .student-checked-in {
-  color: #48bb78 !important;
+  color: #000 !important;
+  background-color: var(--color-student-checked-in, #48bb78) !important;
   font-weight: 600;
 }
 
 .mentor-coach-checked-in {
-  color: #4299e1 !important;
+  color: #000 !important;
+  background-color: var(--color-mentor-checked-in, #4299e1) !important;
   font-weight: 600;
 }
 
 .not-checked-in {
-  color: #a0aec0 !important;
+  color: #000 !important;
+  background-color: var(--color-not-checked-in, #a0aec0) !important;
   font-weight: 500;
+}
+
+/* Core hours compliance status indicators */
+.status-indicator {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.status-indicator.checkmark {
+  color: #22c55e;
+}
+
+.status-indicator.unexcused {
+  color: #dc2626;
+  text-decoration: line-through;
 }
 .timeline-grid {
   flex: 1;
@@ -85,7 +105,7 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: #ff6b6b;
+  background: var(--color-current-time, #ff6b6b);
   z-index: 10;
   box-shadow: 0 0 8px rgba(255, 107, 107, 0.6);
   pointer-events: none;
@@ -100,7 +120,7 @@
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 8px solid #ff6b6b;
+  border-top: 8px solid var(--color-current-time, #ff6b6b);
 }
 
 .timeline-row {
@@ -136,7 +156,7 @@
   position: absolute;
   top: 4px;
   height: 20px;
-  background: #4fd1c5;
+  background: var(--color-past-session, #4fd1c5);
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   transition: background 0.2s;
@@ -144,7 +164,7 @@
   z-index: 2;
 }
 .timeline-bar.active {
-  background: #f6e05e;
+  background: var(--color-active-session, #f6e05e);
   opacity: 1;
   box-shadow: 0 2px 12px rgba(246,224,94,0.25);
 }
@@ -251,83 +271,51 @@
   color: white;
   font-size: 1.5rem;
 }
-/* Styles for excused absences */
-.timeline-row.excused-absent {
-  opacity: 0.75;
-  background-color: rgba(144, 238, 144, 0.15);
-  border-radius: 4px;
-  padding: 2px;
-}
-
-.timeline-label.excused-label {
-  color: #90ee90;
-  font-weight: 600;
-}
-
-.excused-badge {
-  display: inline-block;
-  background-color: #90ee90;
-  color: #2d5016;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: bold;
-  margin-left: 8px;
-}
-
-.excused-bar {
-  position: absolute;
-  top: 4px;
-  left: 0;
-  right: 0;
-  height: 20px;
-  background: linear-gradient(90deg, #90ee90 0%, #7dd37d 100%);
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(144, 238, 144, 0.3);
-  opacity: 0.9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #2d5016;
-  font-size: 0.8rem;
-  font-weight: bold;
-}
 
 /* Compact timeline overrides: enforce single-line names and tighter rows */
 .timeline-row {
-  min-height: 28px;
+  min-height: 20px;
+  gap: 0;
 }
 
 .timeline-label.user-label,
 .timeline-label.user-label-header {
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .timeline-label.user-label {
-  font-size: 0.95rem;
-  padding: 0.25rem 0.5rem;
-  margin-right: 0.35rem;
+  font-size: 0.85rem;
+  padding: 0.15rem 0.4rem;
+  margin-right: 0.25rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 2px;
 }
 
 .timeline-bars {
-  height: 22px;
+  height: 16px;
 }
 
 .timeline-bar {
-  top: 2px;
-  height: 18px;
+  top: 1px;
+  height: 14px;
 }
 
 .timeline-header {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .timeline-hour {
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .timeline-body {
-  gap: 0.25rem;
+  gap: 0.1rem;
+}
+
+.status-indicator {
+  font-size: 1rem;
+  margin-left: 0.25rem;
 }

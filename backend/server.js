@@ -5,8 +5,9 @@ require('dotenv').config();
 
 const requestLogger = require('./middleware/logger');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
-const { optionalAuth } = require('./middleware/auth');
+const { optionalAuth, requireMentorOrCoach } = require('./middleware/auth');
 const { processMidnightCheckout } = require('./utils/midnightCheckout');
+const { startCoreHoursChecker, checkCoreHoursCompliance } = require('./utils/coreHoursChecker');
 
 // Import routes
 const kioskRoutes = require('./routes/kiosk');
@@ -42,6 +43,17 @@ app.post('/admin/midnight-checkout', async (req, res) => {
   try {
     await processMidnightCheckout();
     res.json({ success: true, message: '2 AM checkout process completed' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Manual trigger for core hours compliance checker (for testing)
+app.post('/admin/test-core-hours-checker', requireMentorOrCoach, async (req, res) => {
+  try {
+    console.log('[MANUAL TRIGGER] Running core hours compliance check...');
+    await checkCoreHoursCompliance();
+    res.json({ success: true, message: 'Core hours compliance check completed' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -84,6 +96,9 @@ cron.schedule('0 2 * * *', async () => {
 });
 
 console.log('✓ Auto-checkout scheduled (2:00 AM daily)');
+
+// Start core hours compliance checker (runs every 15 minutes)
+startCoreHoursChecker();
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

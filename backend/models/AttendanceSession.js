@@ -152,6 +152,19 @@ class AttendanceSession {
     return result.rows;
   }
 
+  // Get sessions for a user within a specific time range (for core hours checking)
+  static async findByUserAndDateRange(userId, startTime, endTime) {
+    const query = `
+      SELECT * FROM attendance_sessions 
+      WHERE user_id = $1 
+        AND check_in_time < $3
+        AND (check_out_time IS NULL OR check_out_time > $2)
+      ORDER BY check_in_time ASC
+    `;
+    const result = await db.query(query, [userId, startTime, endTime]);
+    return result.rows;
+  }
+
   static async getSessionsWithReflections(userId) {
     const query = `
       SELECT 
