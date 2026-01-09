@@ -109,6 +109,9 @@ sudo cp -r dist/* /var/www/rob-attendance-site/
 
 # Set correct ownership for nginx
 sudo chown -R www-data:www-data /var/www/rob-attendance-site
+
+# Reload nginx to ensure new site is served
+sudo systemctl reload nginx
 ```
 
 ### 8. Verify Update
@@ -171,6 +174,25 @@ cd /var/www/RoboticsAttendance/backend
 node scripts/migrate.js
 # Or whatever migration script is provided
 ```
+
+### Option 1b: Feature-Specific Migration Scripts
+
+If a feature update includes a migration script, run it after pulling changes:
+
+```bash
+cd /var/www/RoboticsAttendance/backend
+
+# Absence management tables
+node scripts/createAbsenceTables.js
+
+# Add color preferences for presence board
+node scripts/addPresenceColors.js
+
+# Add operating hours configuration
+node scripts/addPresenceHours.js
+```
+
+Run only the scripts relevant to the features you are updating. Each script is safe to run once; re-running may have no effect if changes already applied.
 
 ### Option 2: Reinitialize Schema
 
