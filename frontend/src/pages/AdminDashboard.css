@@ -557,6 +557,18 @@
   height: 31px;
 }
 
+/* Quick Check In/Out buttons - make them larger and more readable */
+.attendance-tab .quick-check-form .btn-success,
+.attendance-tab .quick-check-form .btn-danger {
+  min-width: 100px;
+  width: auto;
+  max-width: none;
+  height: auto;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  flex: 0 0 auto;
+}
+
 /* Absences tab: minimize edit column */
 .absence-tab .attendance-table th:first-child,
 .absence-tab .attendance-table td:first-child {
