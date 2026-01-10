@@ -155,6 +155,7 @@ function UsersTab({ userRole }) {
       }
       
       setEditingUser(null);
+      setShowCreateForm(false);
       setFormData({
         firstName: '',
         lastName: '',
@@ -178,6 +179,16 @@ function UsersTab({ userRole }) {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         await userApi.delete(userId);
+        setEditingUser(null);
+        setShowCreateForm(false);
+        setFormData({
+          firstName: '',
+          lastName: '',
+          alias: '',
+          role: 'student',
+          pin: '',
+          middleName: '',
+        });
         fetchUsers();
       } catch (err) {
         setError('Failed to delete user: ' + (err.response?.data?.error || err.message));
@@ -203,6 +214,7 @@ function UsersTab({ userRole }) {
   };
 
   const startEdit = (user) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingUser(user);
     setFormData({
       firstName: user.first_name,
@@ -371,7 +383,8 @@ function UsersTab({ userRole }) {
                   </td>
                   <td>{user.alias}</td>
                   <td>
-                    <span className={`role-badge role-${user.role}`}>{user.role}</span>
+                    <span className={`role-badge role-${user.role}`}></span>
+                    {user.role}
                   </td>
                   <td>
                     <span className={`status-badge ${user.is_active ? 'active' : 'inactive'}`}>
@@ -389,15 +402,6 @@ function UsersTab({ userRole }) {
                         onClick={() => handleResetPin(user.id)}
                       >
                         Reset PIN
-                      </button>
-                    )}
-                    {/* Delete allowed for mentor or coach */}
-                    {(userRole === 'coach' || userRole === 'mentor') && (
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleDeleteUser(user.id)}
-                      >
-                        Delete
                       </button>
                     )}
                   </td>
