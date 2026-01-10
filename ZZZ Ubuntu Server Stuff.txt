@@ -1,0 +1,33 @@
+sudo mv rob-attendance-site rob-attendance-site-bak
+sudo mv rob-attendance-site-dev rob-attendance-site
+sudo systemctl reload nginx
+
+# running sql commands linux
+psql -U attendance_user -d attendance -h localhost -W
+
+# Get attendance records
+SELECT 
+  u.alias, 
+  u.first_name, 
+  u.last_name,
+  a.check_in_time, 
+  a.check_out_time, 
+  a.duration_minutes
+FROM attendance_sessions a
+JOIN users u ON a.user_id = u.id
+WHERE u.alias = 'their_alias'
+ORDER BY a.check_in_time DESC;
+
+#Update User role
+UPDATE users SET role = 'mentor', updated_at = CURRENT_TIMESTAMP WHERE alias = 'their_alias';
+
+#Update schedule start or end check_in_time
+SELECT
+  a.id, u.alias,
+  a.check_in_time,
+  a.check_out_time,
+  a.duration_minutes
+FROM attendance_sessions a
+JOIN users u ON a.user_id = u.id
+WHERE u.alias = 'Kendrick' OR u.alias = 'Nancy'
+ORDER BY a.check_in_time D
