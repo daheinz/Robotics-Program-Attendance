@@ -1,3 +1,6 @@
+SSH atmgr@192.168.1.68 robotics__202
+
+
 sudo mv rob-attendance-site rob-attendance-site-bak
 sudo mv rob-attendance-site-dev rob-attendance-site
 sudo systemctl reload nginx
@@ -30,4 +33,25 @@ SELECT
 FROM attendance_sessions a
 JOIN users u ON a.user_id = u.id
 WHERE u.alias = 'Kendrick' OR u.alias = 'Nancy'
-ORDER BY a.check_in_time D
+ORDER BY a.check_in_time;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The target time zone is CST for us.  It should be per-user based on browser timezone.
+SHould handle Daylight savings time.   
+Date boundaries should for reports and queries in the app should be from the Local perspective.  midnight to midnight local time
+Core hours I would expect to be stored in utc time in the database and reflected in local time in the app
+Specifically, when 

@@ -785,10 +785,11 @@ function AttendanceTab() {
     return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
   };
 
-  // Convert datetime-local input to ISO format for backend
+  // Convert datetime-local input to backend format
   const formatForBackend = (localString) => {
     if (!localString) return '';
-    // Add seconds: "YYYY-MM-DDTHH:mm:ss"
+    // Just add seconds - keep it in local time to match server timezone (CST)
+    // TIMESTAMP column stores as-is without timezone conversion
     return localString + ':00';
   };
 
