@@ -35,8 +35,11 @@ JOIN users u ON a.user_id = u.id
 WHERE u.alias = 'Kendrick' OR u.alias = 'Nancy'
 ORDER BY a.check_in_time;
 
+UPDATE attendance_sessions 
+SET check_in_time = check_in_time - INTERVAL '6 hours';
 
-
+UPDATE attendance_sessions 
+SET check_out_time = check_out_time - INTERVAL '6 hours';
 
 
 
