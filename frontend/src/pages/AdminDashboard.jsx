@@ -1026,7 +1026,15 @@ function AttendanceTab() {
   const formatDateTime = (dt) => {
     if (!dt) return '';
     // Backend returns timestamps in local time format: "2026-01-08 14:00:00" or "2026-01-08T14:00:00"
-    return new Date(dt.replace(' ', 'T')).toLocaleString();
+    const d = new Date(dt.replace(' ', 'T'));
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const year = String(d.getFullYear()).slice(-2);
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${month}/${day}/${year} ${hours}:${minutes} ${ampm}`;
   };
 
   return (

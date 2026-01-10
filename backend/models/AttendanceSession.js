@@ -118,7 +118,8 @@ class AttendanceSession {
         u.role
       FROM attendance_sessions a
       INNER JOIN users u ON a.user_id = u.id
-      WHERE DATE(a.check_in_time) = $1
+      WHERE a.check_in_time >= ($1::date)::timestamp
+        AND a.check_in_time < ($1::date + interval '1 day')::timestamp
       ORDER BY a.check_in_time ASC
     `;
     const result = await db.query(query, [date]);
@@ -186,11 +187,13 @@ class AttendanceSession {
 
     if (startDate) {
       params.push(startDate);
-      conditions.push(`DATE(a.check_in_time) >= $${params.length}`);
+      // Convert to start of day in local time, then to UTC for comparison
+      conditions.push(`a.check_in_time >= ($${params.length}::date)::timestamp`);
     }
     if (endDate) {
       params.push(endDate);
-      conditions.push(`DATE(a.check_in_time) <= $${params.length}`);
+      // Convert to end of day in local time, then to UTC for comparison
+      conditions.push(`a.check_in_time < ($${params.length}::date + interval '1 day')::timestamp`);
     }
     if (userIds && userIds.length > 0) {
       params.push(userIds);
@@ -230,7 +233,8 @@ class AttendanceSession {
       FROM attendance_sessions a
       INNER JOIN users u ON a.user_id = u.id
       LEFT JOIN reflections r ON a.id = r.attendance_id
-      WHERE DATE(a.check_in_time) BETWEEN $1 AND $2
+      WHERE a.check_in_time >= ($1::date)::timestamp
+        AND a.check_in_time < ($2::date + interval '1 day')::timestamp
       ORDER BY a.check_in_time ASC
     `;
     const result = await db.query(query, [startDate, endDate]);
