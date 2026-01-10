@@ -1,17 +1,32 @@
 const db = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 
+// Helper function to get current local time as a string (YYYY-MM-DD HH:MM:SS)
+function getCurrentLocalTime() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 class AttendanceSession {
-  static async create(userId) {
+  static async create(userId, checkInTime = null) {
     const id = uuidv4();
+    
+    // Use provided time or current local time from Node.js server
+    const timestamp = checkInTime || getCurrentLocalTime();
     
     const query = `
       INSERT INTO attendance_sessions (id, user_id, check_in_time)
-      VALUES ($1, $2, CURRENT_TIMESTAMP)
+      VALUES ($1, $2, $3)
       RETURNING *
     `;
     
-    const values = [id, userId];
+    const values = [id, userId, timestamp];
     const result = await db.query(query, values);
     return result.rows[0];
   }
@@ -33,16 +48,19 @@ class AttendanceSession {
     return result.rows[0];
   }
 
-  static async checkout(sessionId) {
+  static async checkout(sessionId, checkOutTime = null) {
+    // Use provided time or current local time from Node.js server
+    const timestamp = checkOutTime || getCurrentLocalTime();
+    
     const query = `
       UPDATE attendance_sessions 
-      SET check_out_time = CURRENT_TIMESTAMP,
-          duration_minutes = EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - check_in_time)) / 60,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1
+      SET check_out_time = $1,
+          duration_minutes = EXTRACT(EPOCH FROM ($1::timestamp - check_in_time)) / 60,
+          updated_at = $1
+      WHERE id = $2
       RETURNING *
     `;
-    const result = await db.query(query, [sessionId]);
+    const result = await db.query(query, [timestamp, sessionId]);
     return result.rows[0];
   }
 

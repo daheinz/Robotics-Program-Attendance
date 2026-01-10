@@ -785,11 +785,11 @@ function AttendanceTab() {
     return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
   };
 
-  // Convert datetime-local input to backend format
+  // Convert datetime-local input to backend format (keep as local time)
   const formatForBackend = (localString) => {
     if (!localString) return '';
-    // Just add seconds - keep it in local time to match server timezone (CST)
-    // TIMESTAMP column stores as-is without timezone conversion
+    // PostgreSQL TIMESTAMP (without timezone) stores the value as-is in local time
+    // So we send "2026-01-10T16:30:00" and it stores exactly that in the database's local timezone
     return localString + ':00';
   };
 
