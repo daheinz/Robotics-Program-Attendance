@@ -1,3 +1,93 @@
+/* Two-column layout for presence board and leaderboard */
+.presence-board-layout {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.timeline-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.leaderboard-section {
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+  flex-shrink: 0;
+}
+
+/* Compact leaderboard styles when embedded in presence board */
+.leaderboard-section .leaderboard-container {
+  min-height: auto;
+  padding: 0;
+}
+
+.leaderboard-section .leaderboard-content {
+  max-width: none;
+  margin: 0;
+}
+
+.leaderboard-section .leaderboard-header {
+  margin-bottom: 0.5rem;
+}
+
+.leaderboard-section .leaderboard-header h1 {
+  font-size: 1.1rem;
+  margin-bottom: 0.15rem;
+}
+
+.leaderboard-section .leaderboard-subtitle {
+  font-size: 0.7rem;
+}
+
+.leaderboard-section .leaderboard-grid {
+  padding: 0.5rem;
+}
+
+.leaderboard-section .table-header {
+  grid-template-columns: 30px 1fr 65px;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.leaderboard-section .table-body {
+  gap: 0.3rem;
+}
+
+.leaderboard-section .table-row {
+  grid-template-columns: 30px 1fr 65px;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.leaderboard-section .col-sessions,
+.leaderboard-section .col-hours {
+  font-size: 0.75rem;
+}
+
+.leaderboard-section .rank-badge {
+  font-size: 0.75rem;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+}
+
+.leaderboard-section .student-name {
+  font-size: 0.8rem;
+}
+
+.leaderboard-section .hours-value {
+  font-size: 0.8rem;
+}
+
+.leaderboard-section .hours-label {
+  font-size: 0.65rem;
+}
+
 /* Color coding for timeline labels based on check-in status */
 .student-checked-in {
   color: #000 !important;

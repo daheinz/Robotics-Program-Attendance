@@ -344,3 +344,8 @@
     font-size: 0.75rem;
   }
 }
+
+/* Hide sessions column when embedded in presence board */
+.leaderboard-section .col-sessions {
+  display: none;
+}

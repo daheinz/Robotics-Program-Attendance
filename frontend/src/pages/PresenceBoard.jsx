@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AdminNav from '../components/AdminNav';
 import api, { attendanceApi, kioskApi, settingsApi } from '../services/api';
+import Leaderboard from './Leaderboard';
 import './PresenceBoard.css';
 
 
@@ -280,6 +281,8 @@ function PresenceBoard() {
 
       {error && <div className="error-message">{error}</div>}
 
+      <div className="presence-board-layout">
+        <div className="timeline-section">
       <div className="timeline-container">
         <div className="timeline-grid">
         <div className="timeline-header" style={{ position: 'relative' }}>
@@ -526,6 +529,11 @@ function PresenceBoard() {
             <span className="status-icon approved" style={{ background: '#176a1a', color: '#fff' }}>E</span>
             <span>Excused absence</span>
           </div>
+        </div>
+      </div>
+        </div>
+        <div className="leaderboard-section">
+          <Leaderboard />
         </div>
       </div>
     </div>
