@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import KioskPage from './pages/KioskPage';
 import StudentDashboard from './pages/StudentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -16,6 +16,7 @@ function AppContent() {
   const [userName, setUserName] = useState(localStorage.getItem('userName'));
   const [userId, setUserId] = useState(localStorage.getItem('userId'));
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Inactivity timeout - log out after 5 minutes of inactivity
   useEffect(() => {
@@ -89,14 +90,20 @@ function AppContent() {
     }
   }, []);
 
+  const standalonePaths = ['/leaderboard', '/presenceboard'];
+  if (standalonePaths.includes(location.pathname)) {
+    return (
+      <div className="app">
+        <Routes>
+          <Route path="/presenceboard" element={<PresenceBoard />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+        </Routes>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
-      <Routes>
-        {/* Public routes - no authentication required */}
-        <Route path="/presenceboard" element={<PresenceBoard />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-      </Routes>
-      
       {!authenticated ? (
           // Kiosk Mode - Entry Point
           <KioskPage onAuth={handleKioskAuth} />
