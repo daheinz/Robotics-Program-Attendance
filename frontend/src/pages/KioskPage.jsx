@@ -202,7 +202,7 @@ function KioskPage({ onAuth }) {
             onChange={(e) => setPin(e.target.value)}
             maxLength="6"
             autoFocus
-            onKeyPress={(e) => {
+            onKeyDown={(e) => {
               if (e.key === 'Enter') handlePinSubmit();
             }}
           />
