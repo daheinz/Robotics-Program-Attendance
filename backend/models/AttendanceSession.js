@@ -55,7 +55,7 @@ class AttendanceSession {
     const query = `
       UPDATE attendance_sessions 
       SET check_out_time = $1,
-          duration_minutes = EXTRACT(EPOCH FROM ($1::timestamp - check_in_time)) / 60,
+          duration_minutes = EXTRACT(EPOCH FROM ($1::timestamp - check_in_time))::numeric / 60,
           updated_at = $1
       WHERE id = $2
       RETURNING *
@@ -83,7 +83,7 @@ class AttendanceSession {
     }
     
     // Recalculate duration
-    updates.push(`duration_minutes = EXTRACT(EPOCH FROM (check_out_time - check_in_time)) / 60`);
+    updates.push(`duration_minutes = EXTRACT(EPOCH FROM (check_out_time - check_in_time))::numeric / 60`);
     updates.push(`updated_at = CURRENT_TIMESTAMP`);
     
     values.push(sessionId);
@@ -263,6 +263,28 @@ class AttendanceSession {
     const query = 'DELETE FROM attendance_sessions WHERE id = $1';
     await db.query(query, [sessionId]);
     return true;
+  }
+
+  // Get top students by total attendance hours
+  static async getLeaderboard(limit = 10) {
+    const query = `
+      SELECT 
+        u.id,
+        u.alias,
+        u.first_name,
+        u.last_name,
+        COALESCE(ROUND(SUM(COALESCE(a.duration_minutes, 0)) / 60.0, 2), 0) as total_hours,
+        COUNT(CASE WHEN a.check_out_time IS NOT NULL THEN 1 END) as session_count,
+        MAX(a.check_in_time) as last_attendance
+      FROM users u
+      LEFT JOIN attendance_sessions a ON u.id = a.user_id AND a.check_out_time IS NOT NULL
+      WHERE u.role = 'student'
+      GROUP BY u.id, u.alias, u.first_name, u.last_name
+      ORDER BY total_hours DESC
+      LIMIT $1
+    `;
+    const result = await db.query(query, [limit]);
+    return result.rows;
   }
 }
 

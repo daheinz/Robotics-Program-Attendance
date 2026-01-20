@@ -76,6 +76,9 @@ router.get('/me/history', requireAuth, AttendanceController.getMyHistory);
 // GET /attendance/timeline?date=YYYY-MM-DD - Get timeline data (public, no auth required)
 router.get('/timeline', validateDate, handleValidationErrors, AttendanceController.getTimeline);
 
+// GET /attendance/leaderboard - Get top students by attendance hours (public)
+router.get('/leaderboard', AttendanceController.getLeaderboard);
+
 // GET /attendance/range?start_date&end_date&user_ids=comma,list
 router.get('/range', requireMentorOrCoach, handleValidationErrors, AttendanceController.getByRange);
 

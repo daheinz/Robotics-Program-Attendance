@@ -80,6 +80,8 @@ export const attendanceApi = {
       params: { start_date: startDate, end_date: endDate },
       responseType: 'blob',
     }),
+  getLeaderboard: (limit = 10) =>
+    api.get('/attendance/leaderboard', { params: { limit } }),
 };
 
 // Absence endpoints

@@ -571,6 +571,18 @@ class AttendanceController {
       res.status(500).json({ error: 'Failed to check out user' });
     }
   }
+
+  // GET /attendance/leaderboard - Get top 10 students by all-time attendance hours
+  static async getLeaderboard(req, res) {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+      const leaderboard = await AttendanceSession.getLeaderboard(limit);
+      res.json(leaderboard);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      res.status(500).json({ error: 'Failed to fetch leaderboard' });
+    }
+  }
 }
 
 module.exports = AttendanceController;

@@ -4,6 +4,7 @@ import KioskPage from './pages/KioskPage';
 import StudentDashboard from './pages/StudentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import PresenceBoard from './pages/PresenceBoard';
+import Leaderboard from './pages/Leaderboard';
 import ReportingPage from './pages/ReportingPage';
 import CoreHoursConfig from './pages/CoreHoursConfig';
 import api, { kioskApi, attendanceApi } from './services/api';
@@ -91,8 +92,9 @@ function AppContent() {
   return (
     <div className="app">
       <Routes>
-        {/* Public route - no authentication required */}
+        {/* Public routes - no authentication required */}
         <Route path="/presenceboard" element={<PresenceBoard />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
       </Routes>
       
       {!authenticated ? (

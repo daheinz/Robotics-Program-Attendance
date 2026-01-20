@@ -17,6 +17,11 @@ export default function AdminNav() {
           </Link>
         </li>
         <li>
+          <Link to="/leaderboard" className="admin-nav-link">
+            🏆 Leaderboard
+          </Link>
+        </li>
+        <li>
           <Link to="/core-hours" className="admin-nav-link">
             ⏰ Core Hours
           </Link>

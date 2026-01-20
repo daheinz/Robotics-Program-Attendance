@@ -1,0 +1,346 @@
+.leaderboard-container {
+  min-height: 100vh;
+  background: #3a3a3a;
+  padding: 1.25rem;
+  display: flex;
+  justify-content: center;
+}
+
+.leaderboard-content {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.leaderboard-header {
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.leaderboard-header h1 {
+  font-size: 2rem;
+  color: white;
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+
+.leaderboard-subtitle {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.leaderboard-grid {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.leaderboard-table {
+  width: 100%;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 60px 1fr 90px 110px;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+  color: white;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.table-header > div {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.col-rank {
+  justify-content: center;
+  text-align: center;
+}
+
+.col-hours {
+  justify-content: flex-end;
+}
+
+.col-sessions {
+  justify-content: center;
+  text-align: center;
+}
+
+.table-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 90px 110px;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  align-items: center;
+  color: white;
+  font-size: 0.9rem;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.table-row:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(4px);
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 1rem;
+  color: white;
+}
+
+.rank-badge.rank-1 {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #333;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+.rank-badge.rank-2 {
+  background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+  color: #333;
+  box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+}
+
+.rank-badge.rank-3 {
+  background: linear-gradient(135deg, #cd7f32, #e8a76a);
+  color: white;
+  box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+}
+
+.rank-badge {
+  background: linear-gradient(135deg, #48bb78, #5ecb8e);
+  color: white;
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+}
+
+.student-name {
+  font-weight: 600;
+  font-size: 1rem;
+  display: block;
+}
+
+.hours-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #4fd1c5;
+  display: block;
+}
+
+.hours-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  display: block;
+}
+
+.col-rank,
+.col-hours,
+.col-sessions {
+  display: flex;
+  align-items: center;
+}
+
+.col-rank {
+  justify-content: center;
+}
+
+.col-hours {
+  justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.col-sessions {
+  justify-content: center;
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: white;
+}
+
+.loading-state p,
+.error-state p,
+.empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.error-state {
+  background: rgba(229, 57, 53, 0.15);
+  border: 1px solid rgba(229, 57, 53, 0.3);
+}
+
+.error-state p {
+  color: #ff9999;
+  margin-bottom: 1rem;
+}
+
+.retry-btn {
+  padding: 0.5rem 1.5rem;
+  background: rgba(72, 187, 120, 0.8);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.95rem;
+}
+
+.retry-btn:hover {
+  background: rgba(72, 187, 120, 1);
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .table-header {
+    grid-template-columns: 70px 1fr 90px 100px;
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .table-row {
+    grid-template-columns: 70px 1fr 90px 100px;
+    padding: 0.75rem;
+  }
+
+  .rank-badge {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .hours-value {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .leaderboard-container {
+    padding: 1rem;
+  }
+
+  .leaderboard-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .leaderboard-grid {
+    padding: 1rem;
+  }
+
+  .table-header {
+    grid-template-columns: 60px 1fr 80px 90px;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .table-row {
+    grid-template-columns: 60px 1fr 80px 90px;
+    gap: 0.75rem;
+    padding: 0.5rem;
+  }
+
+  .rank-badge {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+
+  .student-name {
+    font-size: 0.95rem;
+  }
+
+  .hours-value {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .leaderboard-container {
+    padding: 0.5rem;
+  }
+
+  .leaderboard-header {
+    margin-bottom: 1rem;
+  }
+
+  .leaderboard-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .leaderboard-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .leaderboard-grid {
+    padding: 0.5rem;
+  }
+
+  .table-header {
+    grid-template-columns: 50px 1fr 70px 80px;
+    gap: 0.5rem;
+    padding: 0.25rem;
+    font-size: 0.7rem;
+  }
+
+  .table-row {
+    grid-template-columns: 50px 1fr 70px 80px;
+    gap: 0.5rem;
+    padding: 0.25rem;
+  }
+
+  .rank-badge {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  .student-name {
+    font-size: 0.85rem;
+  }
+
+  .hours-value {
+    font-size: 0.9rem;
+  }
+
+  .hours-label {
+    font-size: 0.7rem;
+  }
+
+  .col-last {
+    font-size: 0.75rem;
+  }
+}
