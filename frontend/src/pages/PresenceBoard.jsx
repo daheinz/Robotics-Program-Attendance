@@ -22,7 +22,7 @@ function PresenceBoard() {
   const [now, setNow] = useState(new Date());
   const [seasonType, setSeasonType] = useState('build');
   const [timelineWindow, setTimelineWindow] = useState({ min: 8, max: 24 });
-  const [barOffsetPx, setBarOffsetPx] = useState(160);
+  const barOffsetPx = 184; // Fixed offset: status-col (16px) + gaps (0.25rem x2) + user-label (160px)
   const timelineBodyRef = useRef(null);
   const [colors, setColors] = useState({
     studentCheckedIn: '#48bb78',
@@ -230,18 +230,6 @@ function PresenceBoard() {
   const span = Math.max(1, maxHour - minHour);
   const HOURS = Array.from({ length: maxHour - minHour + 1 }, (_, i) => minHour + i);
 
-  // Measure the pixel offset to the first timeline bar so the current-time marker aligns with bars
-  useEffect(() => {
-    if (!timelineBodyRef.current) return;
-    const firstBars = timelineBodyRef.current.querySelector('.timeline-bars');
-    if (firstBars) {
-      const bodyRect = timelineBodyRef.current.getBoundingClientRect();
-      const barsRect = firstBars.getBoundingClientRect();
-      const offset = Math.max(0, barsRect.left - bodyRect.left);
-      setBarOffsetPx(offset);
-    }
-  }, [sessions, students, timelineWindow]);
-
   // Helper: consistent bar positioning logic for active and past sessions
   const computeBarPosition = (checkIn, checkOut) => {
     const startHour = Math.max(getHourOffset(checkIn), minHour);
@@ -286,6 +274,7 @@ function PresenceBoard() {
       <div className="timeline-container">
         <div className="timeline-grid">
         <div className="timeline-header" style={{ position: 'relative' }}>
+          <div className="status-col status-col-header" aria-hidden="true" />
           <div className="timeline-label user-label-header"></div>
           <div style={{ position: 'relative', flex: '1 1 0', display: 'flex' }}>
             {/* Red boxes for required practice times */}
@@ -325,6 +314,70 @@ function PresenceBoard() {
           </div>
         </div>
         <div className="timeline-body" ref={timelineBodyRef}>
+          {/* Current time marker wrapper - aligns with timeline-bars */}
+          <div className="current-time-marker-wrapper">
+            <div className="timeline-hour-lines" aria-hidden="true">
+              <div className="timeline-hour-boundary" style={{ left: '0%' }}></div>
+              <div className="timeline-hour-boundary" style={{ left: '100%' }}></div>
+              {HOURS.map((hour) => {
+                const hourIndex = hour - minHour;
+                const totalHours = HOURS.length;
+                const position = ((hourIndex + 0.5) / totalHours) * 100;
+                return (
+                  <div
+                    key={`hour-line-${hour}`}
+                    className="timeline-hour-line"
+                    style={{ left: `${position}%` }}
+                  ></div>
+                );
+              })}
+            </div>
+            {/* DEBUG: Yellow bounding box */}
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                border: '3px solid yellow',
+                pointerEvents: 'none',
+                zIndex: 998,
+                boxSizing: 'border-box'
+              }}
+            ></div>
+            
+            {(() => {
+              const currentHour = getHourOffset(now);
+              if (currentHour >= minHour && currentHour <= maxHour) {
+                // Calculate percentage same as timeline bars
+                const position = ((currentHour - minHour) / span) * 100;
+                
+                // Get bounding box info for debugging
+                const wrapper = document.querySelector('.current-time-marker-wrapper');
+                if (wrapper) {
+                  const rect = wrapper.getBoundingClientRect();
+                  const markerLeft = (position / 100) * rect.width;
+                  console.log(
+                    `[PresenceBoard] ` +
+                    `Time: ${now.toLocaleTimeString()} (${currentHour.toFixed(2)}h) | ` +
+                    `Yellow Box: left=${rect.left.toFixed(0)}px, width=${rect.width.toFixed(0)}px | ` +
+                    `Red Line: ${position.toFixed(2)}% = ${markerLeft.toFixed(0)}px from box start = ${(rect.left + markerLeft).toFixed(0)}px absolute`
+                  );
+                }
+                
+                return (
+                  <div 
+                    className="current-time-marker" 
+                    style={{ left: `${position}%` }}
+                    title={`Current time: ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`}
+                  ></div>
+                );
+              }
+              return null;
+            })()}
+          </div>
+          
           {/* Core hours shaded regions - drawn first so they're behind everything */}
           {todaysCoreHours.map((ch, idx) => {
             // Parse start and end times
@@ -361,24 +414,6 @@ function PresenceBoard() {
             }
             return null;
           })}
-          
-          {/* Current time marker */}
-          {(() => {
-            const currentHour = getHourOffset(now);
-            if (currentHour >= minHour && currentHour <= maxHour) {
-              // Clamp position to stay within 0-100% range
-              let position = ((currentHour - minHour) / span) * 100;
-              position = Math.max(0, Math.min(100, position)); // Keep between 0-100%
-              return (
-                <div 
-                  className="current-time-marker" 
-                  style={{ left: `calc(${barOffsetPx}px + (100% - ${barOffsetPx}px) * ${position} / 100)` }}
-                  title={`Current time: ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`}
-                ></div>
-              );
-            }
-            return null;
-          })()}
           
           {/* Group A: Coaches / Mentors (present only) */}
           {groupA.map(([userId, user]) => {
@@ -499,41 +534,41 @@ function PresenceBoard() {
         </div>
       </div>
 
-        <div className="timeline-legend">
-          <strong>Legend</strong>
-           <div className="legend-item">
-             <span className="legend-color" style={{ background: colors.pastSession }}></span>
-             <span>Completed Sessions</span>
-           </div>
-           <div className="legend-item">
-             <span className="legend-color" style={{ background: colors.activeSession }}></span>
-             <span>Active Sessions</span>
-           </div>
-           <div className="legend-item">
-            <span className="legend-color" style={{ background: 'rgba(50, 75, 128, 0.5)', border: '1px solid rgba(50, 75, 128, 0.7)' }}></span>
-             <span>Core Hours (required time)</span>
-           </div>
-          <div className="legend-item">
-            <span className="legend-color" style={{ background: colors.currentTime, width: '3px' }}></span>
-            <span>Current time</span>
-          </div>
-          <div className="legend-item">
-            <span className="status-icon checkmark" style={{ background: '#176a1a', color: '#fff' }}>✓</span>
-            <span>Present During Core Hours</span>
-          </div>
-          <div className="legend-item">
-            <span className="status-icon unexcused" style={{ background: '#e53935', color: '#fff' }}>U</span>
-            <span>Unexcused absence</span>
-          </div>
-          <div className="legend-item">
-            <span className="status-icon approved" style={{ background: '#176a1a', color: '#fff' }}>E</span>
-            <span>Excused absence</span>
-          </div>
-        </div>
       </div>
         </div>
         <div className="leaderboard-section">
           <Leaderboard />
+          <div className="timeline-legend">
+            <strong>Legend</strong>
+             <div className="legend-item">
+               <span className="legend-color" style={{ background: colors.pastSession }}></span>
+               <span>Completed Sessions</span>
+             </div>
+             <div className="legend-item">
+               <span className="legend-color" style={{ background: colors.activeSession }}></span>
+               <span>Active Sessions</span>
+             </div>
+             <div className="legend-item">
+              <span className="legend-color" style={{ background: 'rgba(50, 75, 128, 0.5)', border: '1px solid rgba(50, 75, 128, 0.7)' }}></span>
+               <span>Core Hours (required time)</span>
+             </div>
+            <div className="legend-item">
+              <span className="legend-color" style={{ background: colors.currentTime, width: '3px' }}></span>
+              <span>Current time</span>
+            </div>
+            <div className="legend-item">
+              <span className="status-icon checkmark" style={{ background: '#176a1a', color: '#fff' }}>✓</span>
+              <span>Present During Core Hours</span>
+            </div>
+            <div className="legend-item">
+              <span className="status-icon unexcused" style={{ background: '#e53935', color: '#fff' }}>U</span>
+              <span>Unexcused absence</span>
+            </div>
+            <div className="legend-item">
+              <span className="status-icon approved" style={{ background: '#176a1a', color: '#fff' }}>E</span>
+              <span>Excused absence</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

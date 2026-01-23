@@ -44,65 +44,67 @@ function Leaderboard() {
   return (
     <div className="leaderboard-container">
       <div className="leaderboard-content">
-        <div className="leaderboard-header">
-          <h1>🏆 Attendance Leaderboard</h1>
-          <p className="leaderboard-subtitle">Top 10 Students by All-Time Attendance Hours</p>
+        <div className="leaderboard-grid">
+          <div className="leaderboard-header">
+            <h1>🏆 Attendance Leaderboard</h1>
+            <p className="leaderboard-subtitle">Top 10 Students by All-Time Attendance Hours</p>
+          </div>
+
+          {loading && (
+            <div className="loading-state">
+              <p>Loading leaderboard...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="error-state">
+              <p>{error}</p>
+              <button onClick={loadLeaderboard} className="retry-btn">
+                Retry
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <>
+              {leaderboard.length === 0 ? (
+                <div className="empty-state">
+                  <p>No attendance data available yet</p>
+                </div>
+              ) : (
+                <div className="leaderboard-table">
+                  <div className="table-header">
+                    <div className="col-rank">Rank</div>
+                    <div className="col-name">Student</div>
+                    <div className="col-sessions">Sessions</div>
+                    <div className="col-hours">Total Hours</div>
+                  </div>
+                  <div className="table-body">
+                    {leaderboard.map((student, index) => (
+                      <div key={student.id} className="table-row">
+                        <div className="col-rank">
+                          <span className={`rank-badge rank-${index + 1}`}>
+                            {index + 1}
+                          </span>
+                        </div>
+                        <div className="col-name">
+                          <span className="student-name">{student.alias}</span>
+                        </div>
+                        <div className="col-sessions">
+                          {student.session_count}
+                        </div>
+                        <div className="col-hours">
+                          <span className="hours-value">{formatHours(student.total_hours)}</span>
+                          <span className="hours-label">hrs</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
-
-        {loading && (
-          <div className="loading-state">
-            <p>Loading leaderboard...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="error-state">
-            <p>{error}</p>
-            <button onClick={loadLeaderboard} className="retry-btn">
-              Retry
-            </button>
-          </div>
-        )}
-
-        {!loading && !error && (
-          <div className="leaderboard-grid">
-            {leaderboard.length === 0 ? (
-              <div className="empty-state">
-                <p>No attendance data available yet</p>
-              </div>
-            ) : (
-              <div className="leaderboard-table">
-                <div className="table-header">
-                  <div className="col-rank">Rank</div>
-                  <div className="col-name">Student</div>
-                  <div className="col-sessions">Sessions</div>
-                  <div className="col-hours">Total Hours</div>
-                </div>
-                <div className="table-body">
-                  {leaderboard.map((student, index) => (
-                    <div key={student.id} className="table-row">
-                      <div className="col-rank">
-                        <span className={`rank-badge rank-${index + 1}`}>
-                          {index + 1}
-                        </span>
-                      </div>
-                      <div className="col-name">
-                        <span className="student-name">{student.alias}</span>
-                      </div>
-                      <div className="col-sessions">
-                        {student.session_count}
-                      </div>
-                      <div className="col-hours">
-                        <span className="hours-value">{formatHours(student.total_hours)}</span>
-                        <span className="hours-label">hrs</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
