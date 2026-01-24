@@ -1,9 +1,19 @@
 .student-dashboard {
   min-height: 100vh;
   min-width: 1000px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: radial-gradient(circle at top left, #1e1f2b 0%, #0f0f16 55%, #0b0b12 100%);
   padding: 2rem;
   position: relative;
+  color: #f5f6ff;
+  font-family: "Orbitron", "Segoe UI", system-ui, sans-serif;
+  --lcars-panel: #1a1a26;
+  --lcars-panel-2: #202033;
+  --lcars-accent: #ff9f1c;
+  --lcars-accent-2: #ff6f61;
+  --lcars-accent-3: #6c5ce7;
+  --lcars-accent-4: #00cec9;
+  --lcars-text: #f5f6ff;
+  --lcars-muted: rgba(245, 246, 255, 0.7);
 }
 
 /* Hide the global app header - using body to increase specificity */
@@ -21,14 +31,14 @@ body .app-header {
   height: 100%;
   background-image: 
     /* Horizontal trace lines */
-    linear-gradient(90deg, transparent 0%, transparent calc(50% - 0.5px), rgba(0, 217, 255, 0.15) calc(50% - 0.5px), rgba(0, 217, 255, 0.15) calc(50% + 0.5px), transparent calc(50% + 0.5px), transparent 100%),
+    linear-gradient(90deg, transparent 0%, transparent calc(50% - 0.5px), rgba(255, 159, 28, 0.15) calc(50% - 0.5px), rgba(255, 159, 28, 0.15) calc(50% + 0.5px), transparent calc(50% + 0.5px), transparent 100%),
     /* Vertical trace lines */
-    linear-gradient(0deg, transparent 0%, transparent calc(50% - 0.5px), rgba(0, 217, 255, 0.15) calc(50% - 0.5px), rgba(0, 217, 255, 0.15) calc(50% + 0.5px), transparent calc(50% + 0.5px), transparent 100%),
+    linear-gradient(0deg, transparent 0%, transparent calc(50% - 0.5px), rgba(255, 159, 28, 0.15) calc(50% - 0.5px), rgba(255, 159, 28, 0.15) calc(50% + 0.5px), transparent calc(50% + 0.5px), transparent 100%),
     /* Diagonal traces for more complexity */
-    repeating-linear-gradient(45deg, transparent 0%, transparent 80px, rgba(0, 217, 255, 0.08) 80px, rgba(0, 217, 255, 0.08) 81px),
-    repeating-linear-gradient(-45deg, transparent 0%, transparent 80px, rgba(0, 217, 255, 0.08) 80px, rgba(0, 217, 255, 0.08) 81px),
+    repeating-linear-gradient(45deg, transparent 0%, transparent 80px, rgba(108, 92, 231, 0.08) 80px, rgba(108, 92, 231, 0.08) 81px),
+    repeating-linear-gradient(-45deg, transparent 0%, transparent 80px, rgba(108, 92, 231, 0.08) 80px, rgba(108, 92, 231, 0.08) 81px),
     /* Circuit pads */
-    radial-gradient(circle, rgba(0, 217, 255, 0.3) 2px, transparent 2px);
+    radial-gradient(circle, rgba(255, 159, 28, 0.3) 2px, transparent 2px);
   background-size: 
     100% 60px,
     60px 100%,
@@ -66,11 +76,11 @@ body .app-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(0, 217, 255, 0.05);
+  background: var(--lcars-panel);
   padding: 0.5rem 0.75rem;
-  border-radius: 8px;
+  border-radius: 16px;
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(0, 217, 255, 0.2);
+  border: 2px solid rgba(255, 159, 28, 0.35);
   flex: 0;
   max-width: 300px;
 }
@@ -82,16 +92,16 @@ body .app-header {
 }
 
 .dashboard-header .header-text h1 {
-  color: #00D9FF;
+  color: var(--lcars-text);
   font-size: 1.1rem;
   margin: 0;
-  text-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
+  text-shadow: 0 0 10px rgba(255, 159, 28, 0.35);
   font-weight: 800;
   letter-spacing: 1px;
 }
 
 .dashboard-header .header-text .tagline {
-  color: #00D9FF;
+  color: var(--lcars-muted);
   font-size: 0.7rem;
   margin: 0.15rem 0 0 0;
   font-weight: 300;
@@ -99,24 +109,24 @@ body .app-header {
 }
 
 .logout-btn {
-  background: linear-gradient(135deg, #00D9FF 0%, #0099CC 100%);
-  color: #0f0f1e;
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--lcars-text);
   padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  border-radius: 14px;
   font-weight: 700;
   font-size: 0.95rem;
   text-decoration: none;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3);
-  border: none;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(108, 92, 231, 0.45);
   cursor: pointer;
   display: inline-block;
   white-space: nowrap;
 }
 
 .logout-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 217, 255, 0.5);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 10px 22px rgba(255, 159, 28, 0.25);
 }
 
 .header-actions {
@@ -126,34 +136,34 @@ body .app-header {
 }
 
 .admin-btn {
-  background: linear-gradient(135deg, #00D9FF 0%, #0099CC 100%);
-  color: #0f0f1e;
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--lcars-text);
   padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  border-radius: 14px;
   font-weight: 700;
   font-size: 0.95rem;
   text-decoration: none;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3);
-  border: none;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(108, 92, 231, 0.45);
   cursor: pointer;
   display: inline-block;
   white-space: nowrap;
 }
 
 .admin-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 217, 255, 0.5);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 10px 22px rgba(255, 159, 28, 0.25);
 }
 
 .user-badge {
-  background: rgba(0, 217, 255, 0.1);
-  color: #00D9FF;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--lcars-text);
   padding: 0.5rem 1rem;
-  border-radius: 8px;
+  border-radius: 14px;
   font-weight: 600;
   font-size: 0.9rem;
-  border: 2px solid rgba(0, 217, 255, 0.3);
+  border: 2px solid rgba(255, 159, 28, 0.35);
 }
 
 .student-container {
@@ -165,11 +175,12 @@ body .app-header {
 
 /* Expand width a bit for tables on history tabs */
 .history-section {
-  background: white;
-  border-radius: 12px;
+  background: var(--lcars-panel);
+  border-radius: 18px;
   padding: 1.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   margin-top: 1rem;
+  border: 2px solid rgba(108, 92, 231, 0.35);
 }
 
 .history-table {
@@ -177,43 +188,44 @@ body .app-header {
   border-collapse: collapse;
   font-size: 0.9rem;
   margin-top: 1rem;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--lcars-text);
 }
 
 .history-table th,
 .history-table td {
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(108, 92, 231, 0.35);
   padding: 0.5rem 0.75rem;
   text-align: left;
 }
 
 .history-table th {
-  background: #f3f6fb;
+  background: rgba(255, 159, 28, 0.18);
   font-weight: 600;
-  color: #333;
+  color: var(--lcars-text);
 }
 
 .history-table tr:nth-child(even) {
-  background: #fafafa;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .history-table tr:nth-child(odd) {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .history-section h2 {
   margin: 0 0 0.5rem 0;
-  color: #00D9FF;
+  color: var(--lcars-text);
 }
 
 .student-nav {
   display: flex;
   gap: 0.5rem;
-  background: rgba(0, 217, 255, 0.08);
+  background: var(--lcars-panel);
   padding: 0.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  border: 2px solid rgba(0, 217, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 159, 28, 0.35);
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -225,10 +237,10 @@ body .app-header {
   padding: 0.5rem 1rem;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 1rem;
   font-weight: 500;
-  color: #00D9FF;
+  color: var(--lcars-text);
   cursor: pointer;
   transition: all 0.2s;
   height: 30px;
@@ -238,45 +250,45 @@ body .app-header {
 }
 
 .nav-tab:hover {
-  background: rgba(0, 217, 255, 0.1);
+  background: rgba(255, 159, 28, 0.18);
 }
 
 .nav-tab.active {
-  background: rgba(0, 217, 255, 0.3);
-  border: 2px solid #00D9FF;
+  background: rgba(108, 92, 231, 0.25);
+  border: 2px solid rgba(108, 92, 231, 0.6);
 }
   color: white;
 }
 
 .dashboard-section {
-  background: rgba(0, 217, 255, 0.05);
-  border-radius: 12px;
+  background: var(--lcars-panel);
+  border-radius: 18px;
   padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(0, 217, 255, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  border: 2px solid rgba(255, 159, 28, 0.35);
 }
 
 .contacts-section {
-  background: rgba(0, 217, 255, 0.05);
-  border-radius: 12px;
+  background: var(--lcars-panel);
+  border-radius: 18px;
   padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(0, 217, 255, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  border: 2px solid rgba(255, 159, 28, 0.35);
 }
 
 .contacts-section h2 {
   margin-bottom: 1.5rem;
-  color: #00D9FF;
+  color: var(--lcars-text);
 }
 
 .status-card {
-  background: linear-gradient(135deg, #1a3a52 0%, #2d5a7b 100%);
-  border-radius: 12px;
+  background: linear-gradient(135deg, #1a1a26 0%, #202033 100%);
+  border-radius: 18px;
   padding: 1rem;
-  color: #00D9FF;
+  color: var(--lcars-text);
   margin-bottom: 2rem;
   text-align: center;
-  border: 2px solid rgba(0, 217, 255, 0.3);
+  border: 2px solid rgba(108, 92, 231, 0.35);
 }
 
 .user-identity {
@@ -286,31 +298,31 @@ body .app-header {
   gap: 1rem;
   margin-bottom: 0.75rem;
   padding: 0.75rem;
-  background: rgba(0, 217, 255, 0.1);
-  border-radius: 8px;
-  border: 2px solid rgba(0, 217, 255, 0.4);
-  box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  border: 2px solid rgba(255, 159, 28, 0.35);
+  box-shadow: 0 0 20px rgba(255, 159, 28, 0.2);
 }
 
 .user-name {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #00D9FF;
-  text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+  color: var(--lcars-text);
+  text-shadow: 0 0 10px rgba(255, 159, 28, 0.35);
   letter-spacing: 1px;
 }
 
 .user-role-badge {
-  background: linear-gradient(135deg, #00D9FF 0%, #0099CC 100%);
-  color: #0f0f1e;
+  background: linear-gradient(135deg, #ff9f1c 0%, #ff6f61 100%);
+  color: #0f0f16;
   padding: 0.4rem 1rem;
   border-radius: 20px;
   font-weight: 700;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  box-shadow: 0 0 15px rgba(0, 217, 255, 0.6);
-  border: 2px solid #00D9FF;
+  box-shadow: 0 0 15px rgba(255, 159, 28, 0.4);
+  border: 2px solid rgba(255, 159, 28, 0.7);
 }
 
 .status-indicator {
@@ -329,13 +341,13 @@ body .app-header {
 }
 
 .status-dot.checked-in {
-  background: #4caf50;
-  box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+  background: var(--lcars-accent-4);
+  box-shadow: 0 0 12px rgba(0, 206, 201, 0.6);
 }
 
 .status-dot.checked-out {
-  background: #ff9800;
-  box-shadow: 0 0 10px rgba(255, 152, 0, 0.6);
+  background: var(--lcars-accent);
+  box-shadow: 0 0 12px rgba(255, 159, 28, 0.6);
 }
 
 @keyframes pulse {
@@ -373,27 +385,27 @@ body .app-header {
 }
 
 .btn-success {
-  background: #00D9FF;
-  color: #0f0f1e;
+  background: linear-gradient(135deg, #ff9f1c, #ff6f61);
+  color: #0f0f16;
   font-weight: 700;
 }
 
 .btn-success:hover:not(:disabled) {
-  background: #00B8D4;
+  background: linear-gradient(135deg, #ffb347, #ff8364);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 217, 255, 0.4);
+  box-shadow: 0 5px 15px rgba(255, 159, 28, 0.35);
 }
 
 .btn-primary {
-  background: #00D9FF;
-  color: #0f0f1e;
+  background: linear-gradient(135deg, #6c5ce7, #00cec9);
+  color: #0f0f16;
   font-weight: 700;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #00B8D4;
+  background: linear-gradient(135deg, #7d6bff, #26e0da);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 217, 255, 0.4);
+  box-shadow: 0 5px 15px rgba(108, 92, 231, 0.35);
 }
 
 .btn:disabled {
@@ -406,12 +418,12 @@ body .app-header {
 }
 
 .reflection-container {
-  background: rgba(0, 217, 255, 0.08);
-  border: 2px solid rgba(0, 217, 255, 0.4);
-  border-radius: 12px;
+  background: var(--lcars-panel-2);
+  border: 2px solid rgba(108, 92, 231, 0.4);
+  border-radius: 18px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+  box-shadow: 0 0 20px rgba(108, 92, 231, 0.2);
 }
 
 .reflection-header {
@@ -425,34 +437,34 @@ body .app-header {
 .reflection-label {
   display: block;
   font-weight: 700;
-  color: #00D9FF;
-  font-size: 1.1rem;
-  text-shadow: 0 0 5px rgba(0, 217, 255, 0.3);
+  color: var(--lcars-text);
+  font-size: 1.35rem;
+  text-shadow: 0 0 8px rgba(255, 159, 28, 0.35);
   flex: 1;
 }
 
 .required-badge {
-  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+  background: linear-gradient(135deg, #ff6f61 0%, #ff3b3b 100%);
   color: white;
   padding: 0.4rem 1rem;
   border-radius: 20px;
   font-weight: 800;
   font-size: 0.75rem;
   letter-spacing: 1px;
-  box-shadow: 0 0 15px rgba(255, 68, 68, 0.6);
-  border: 2px solid #ff4444;
+  box-shadow: 0 0 15px rgba(255, 111, 97, 0.5);
+  border: 2px solid rgba(255, 111, 97, 0.8);
   animation: pulse 2s infinite;
 }
 
 .optional-badge {
-  background: rgba(0, 217, 255, 0.2);
-  color: #00D9FF;
+  background: rgba(255, 159, 28, 0.2);
+  color: var(--lcars-text);
   padding: 0.4rem 1rem;
   border-radius: 20px;
   font-weight: 700;
   font-size: 0.75rem;
   letter-spacing: 1px;
-  border: 2px solid rgba(0, 217, 255, 0.5);
+  border: 2px solid rgba(255, 159, 28, 0.5);
 }
 
 .form-group {
@@ -463,39 +475,39 @@ body .app-header {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #00D9FF;
+  color: var(--lcars-text);
   font-size: 0.95rem;
 }
 
 .optional-label {
   font-size: 0.75rem;
   font-weight: 400;
-  color: #00D9FF;
+  color: var(--lcars-muted);
   display: inline;
   margin-left: 0.5rem;
 }
 
 .reflection-textarea {
   width: 100%;
-  padding: 0.75rem;
-  border: 2px solid rgba(0, 217, 255, 0.3);
-  border-radius: 8px;
-  font-size: 1rem;
+  padding: 1rem;
+  border: 2px solid rgba(255, 159, 28, 0.5);
+  border-radius: 12px;
+  font-size: 1.25rem;
   font-family: inherit;
   resize: vertical;
-  background: rgba(0, 217, 255, 0.05);
-  color: #00D9FF;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--lcars-text);
 }
 
 .reflection-textarea:focus {
   outline: none;
-  border-color: #00D9FF;
-  box-shadow: 0 0 15px rgba(0, 217, 255, 0.4);
-  background: rgba(0, 217, 255, 0.08);
+  border-color: rgba(255, 159, 28, 0.9);
+  box-shadow: 0 0 18px rgba(255, 159, 28, 0.45);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .reflection-textarea::placeholder {
-  color: rgba(0, 217, 255, 0.4);
+  color: rgba(245, 246, 255, 0.5);
 }
 
 .reflection-textarea:focus {

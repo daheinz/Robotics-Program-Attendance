@@ -114,19 +114,17 @@ function KioskPage({ onAuth }) {
             <RoboticsIllustration />
           </div>
           <div className="header-text">
-            <h1>Robotics Attendance</h1>
+            <h1>
+              Robotics
+              <br />
+              Attendance
+              <br />
+              Kiosk
+            </h1>
             <p className="tagline">Welcome to the program!</p>
           </div>
         </div>
-        <a href="/presenceboard" className="presenceboard-link">
-          📊 Presence Board
-        </a>
-      </header>
-
-      {error && <div className="error-message">{error}</div>}
-
-      {mode === 'select' && (
-        <>
+        {mode === 'select' && (
           <div className="search-container">
             <p className="instruction">Select your name to continue</p>
             <input
@@ -137,7 +135,16 @@ function KioskPage({ onAuth }) {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+        )}
+        <a href="/presenceboard" className="presenceboard-link">
+          📊 Presence Board
+        </a>
+      </header>
 
+      {error && <div className="error-message">{error}</div>}
+
+      {mode === 'select' && (
+        <>
           <div className="users-container">
             <div className="user-selection">
               {students.length > 0 && (
