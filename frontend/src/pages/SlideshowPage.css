@@ -25,6 +25,27 @@
   padding: 2rem;
 }
 
+.slideshow-joke {
+  position: absolute;
+  max-width: min(680px, 80vw);
+  padding: 1rem 1.2rem;
+  background: rgba(12, 18, 32, 0.78);
+  color: #f8fafc;
+  font-size: 1.35rem;
+  line-height: 1.4;
+  border-radius: 14px;
+  border: 2px solid rgba(56, 189, 248, 0.45);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 900px) {
+  .slideshow-joke {
+    font-size: 1.1rem;
+    max-width: 85vw;
+  }
+}
+
 .slideshow-error {
   color: #f87171;
 }
