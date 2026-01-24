@@ -9,19 +9,77 @@ function Leaderboard() {
 
   useEffect(() => {
     loadLeaderboard();
+    const interval = setInterval(() => {
+      loadLeaderboard({ silent: true });
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const loadLeaderboard = async () => {
+  const loadLeaderboard = async ({ silent } = {}) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       setError(null);
-      const response = await attendanceApi.getLeaderboard();
-      setLeaderboard(response.data || []);
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const dateStr = `${yyyy}-${mm}-${dd}`;
+
+      const [leaderboardResult, timelineResult] = await Promise.allSettled([
+        attendanceApi.getLeaderboard(),
+        attendanceApi.getTimelineWithTz(dateStr),
+      ]);
+
+      if (leaderboardResult.status !== 'fulfilled') {
+        throw leaderboardResult.reason;
+      }
+
+      const baseLeaderboard = leaderboardResult.value.data || [];
+      const timelineData = timelineResult.status === 'fulfilled'
+        ? timelineResult.value.data || []
+        : [];
+
+      const now = new Date();
+      const liveHoursByUser = {};
+
+      timelineData.forEach((session) => {
+        if (!session.check_out_time && session.check_in_time) {
+          const start = new Date(session.check_in_time);
+          const elapsedMs = Math.max(0, now - start);
+          const elapsedHours = elapsedMs / (1000 * 60 * 60);
+          const userId = String(session.user_id);
+          liveHoursByUser[userId] = (liveHoursByUser[userId] || 0) + elapsedHours;
+        }
+      });
+
+      const augmented = baseLeaderboard.map((student) => {
+        const baseHours = typeof student.total_hours === 'string'
+          ? parseFloat(student.total_hours)
+          : Number(student.total_hours || 0);
+        const liveHours = liveHoursByUser[String(student.id)] || 0;
+        const totalHoursLive = (isNaN(baseHours) ? 0 : baseHours) + liveHours;
+        return {
+          ...student,
+          total_hours_live: totalHoursLive,
+        };
+      });
+
+      augmented.sort((a, b) => {
+        const diff = (b.total_hours_live || 0) - (a.total_hours_live || 0);
+        if (diff !== 0) return diff;
+        return String(a.alias || '').localeCompare(String(b.alias || ''));
+      });
+
+      setLeaderboard(augmented);
     } catch (err) {
       console.error('Error loading leaderboard:', err);
       setError('Failed to load leaderboard data');
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -94,7 +152,7 @@ function Leaderboard() {
                           {student.session_count}
                         </div>
                         <div className="col-hours">
-                          <span className="hours-value">{formatHours(student.total_hours)}</span>
+                          <span className="hours-value">{formatHours(student.total_hours_live ?? student.total_hours)}</span>
                           <span className="hours-label">hrs</span>
                         </div>
                       </div>

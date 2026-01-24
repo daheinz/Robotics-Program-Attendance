@@ -281,13 +281,18 @@ function PresenceBoard() {
             {todaysCoreHours.map((ch, idx) => {
               const [startHour, startMin] = ch.start_time.split(':').map(Number);
               const [endHour, endMin] = ch.end_time.split(':').map(Number);
-              const start = startHour + startMin / 60;
-              const end = endHour + endMin / 60;
+              let start = startHour + startMin / 60;
+              let end = endHour + endMin / 60;
+              if (end <= start) {
+                end += 24;
+              }
               
-              const left = ((start - minHour) / span) * 100;
-              const width = ((end - start) / span) * 100;
+              const visibleStart = Math.max(start, minHour);
+              const visibleEnd = Math.min(end, maxHour);
+              const left = ((visibleStart - minHour) / span) * 100;
+              const width = ((visibleEnd - visibleStart) / span) * 100;
               
-              if (end >= minHour && start <= maxHour) {
+              if (visibleEnd > visibleStart) {
                 return (
                   <div
                     key={`header-${idx}`}
@@ -320,9 +325,10 @@ function PresenceBoard() {
               <div className="timeline-hour-boundary" style={{ left: '0%' }}></div>
               <div className="timeline-hour-boundary" style={{ left: '100%' }}></div>
               {HOURS.map((hour) => {
-                const hourIndex = hour - minHour;
-                const totalHours = HOURS.length;
-                const position = ((hourIndex + 0.5) / totalHours) * 100;
+                if (hour === minHour || hour === maxHour) {
+                  return null;
+                }
+                const position = ((hour - minHour) / span) * 100;
                 return (
                   <div
                     key={`hour-line-${hour}`}
@@ -383,15 +389,20 @@ function PresenceBoard() {
             // Parse start and end times
             const [startHour, startMin] = ch.start_time.split(':').map(Number);
             const [endHour, endMin] = ch.end_time.split(':').map(Number);
-            const start = startHour + startMin / 60;
-            const end = endHour + endMin / 60;
+            let start = startHour + startMin / 60;
+            let end = endHour + endMin / 60;
+            if (end <= start) {
+              end += 24;
+            }
             
             // Calculate position and width
-            const left = ((start - minHour) / span) * 100;
-            const width = ((end - start) / span) * 100;
+            const visibleStart = Math.max(start, minHour);
+            const visibleEnd = Math.min(end, maxHour);
+            const left = ((visibleStart - minHour) / span) * 100;
+            const width = ((visibleEnd - visibleStart) / span) * 100;
             
             // Only render if within visible range
-            if (end >= minHour && start <= maxHour) {
+            if (visibleEnd > visibleStart) {
               return (
                 <div
                   key={idx}
