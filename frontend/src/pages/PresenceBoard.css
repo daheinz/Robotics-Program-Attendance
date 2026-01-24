@@ -240,8 +240,11 @@
 
 .timeline-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 1rem;
+  min-height: 32px;
+  padding-top: 0;
+  padding-bottom: 0.2rem;
 }
 
 .timeline-label.user-label-header {
@@ -260,6 +263,19 @@
   color: var(--lcars-text);
   font-size: 1.1rem;
   opacity: 0.9;
+}
+
+.timeline-hours {
+  position: relative;
+  height: 32px;
+}
+
+.timeline-hour-marker {
+  position: absolute;
+  top: 6px;
+  white-space: nowrap;
+  text-align: left;
+  line-height: 1;
 }
 
 .timeline-body {

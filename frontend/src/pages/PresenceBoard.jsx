@@ -276,7 +276,7 @@ function PresenceBoard() {
         <div className="timeline-header" style={{ position: 'relative' }}>
           <div className="status-col status-col-header" aria-hidden="true" />
           <div className="timeline-label user-label-header"></div>
-          <div style={{ position: 'relative', flex: '1 1 0', display: 'flex' }}>
+          <div style={{ position: 'relative', flex: '1 1 0' }}>
             {/* Red boxes for required practice times */}
             {todaysCoreHours.map((ch, idx) => {
               const [startHour, startMin] = ch.start_time.split(':').map(Number);
@@ -300,7 +300,8 @@ function PresenceBoard() {
                       position: 'absolute',
                       left: `${Math.max(0, left)}%`,
                       width: `${Math.min(100, width)}%`,
-                      height: '100%',
+                      height: '28px',
+                      top: '2px',
                       border: '3px solid #ff6b6b',
                       borderRadius: '4px',
                       pointerEvents: 'none',
@@ -313,9 +314,23 @@ function PresenceBoard() {
               }
               return null;
             })}
-            {HOURS.map(hour => (
-              <div key={hour} className="timeline-hour" style={{ flex: '1 1 0' }}>{hour}</div>
-            ))}
+            <div className="timeline-hours" aria-hidden="true">
+              {HOURS.map((hour) => {
+                const position = ((hour - minHour) / span) * 100;
+                const isFirst = hour === minHour;
+                const isLast = hour === maxHour;
+                const translate = isFirst ? '0%' : isLast ? '-100%' : '-50%';
+                return (
+                  <div
+                    key={hour}
+                    className="timeline-hour timeline-hour-marker"
+                    style={{ left: `${position}%`, transform: `translateX(${translate})` }}
+                  >
+                    {hour}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
         <div className="timeline-body" ref={timelineBodyRef}>
