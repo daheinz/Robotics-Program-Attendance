@@ -7,6 +7,7 @@ import PresenceBoard from './pages/PresenceBoard';
 import Leaderboard from './pages/Leaderboard';
 import ReportingPage from './pages/ReportingPage';
 import CoreHoursConfig from './pages/CoreHoursConfig';
+import SlideshowPage from './pages/SlideshowPage';
 import api, { kioskApi, attendanceApi } from './services/api';
 import './App.css';
 
@@ -90,13 +91,14 @@ function AppContent() {
     }
   }, []);
 
-  const standalonePaths = ['/leaderboard', '/presenceboard'];
+  const standalonePaths = ['/leaderboard', '/presenceboard', '/slideshow'];
   if (standalonePaths.includes(location.pathname)) {
     return (
       <div className="app">
         <Routes>
           <Route path="/presenceboard" element={<PresenceBoard />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/slideshow" element={<SlideshowPage />} />
         </Routes>
       </div>
     );

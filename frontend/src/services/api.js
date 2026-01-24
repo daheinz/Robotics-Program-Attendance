@@ -115,4 +115,17 @@ export const settingsApi = {
     api.patch('/settings', payload),
 };
 
+// Slideshow endpoints
+export const slideshowApi = {
+  list: () => api.get('/slideshow/images'),
+  upload: (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post('/slideshow/images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  delete: (filename) => api.delete(`/slideshow/images/${encodeURIComponent(filename)}`),
+};
+
 export default api;

@@ -26,6 +26,9 @@ class SettingsController {
         color_past_session: settings.color_past_session,
         color_active_session: settings.color_active_session,
         color_current_time: settings.color_current_time,
+        slideshow_interval_seconds: settings.slideshow_interval_seconds,
+        slideshow_presence_every_n: settings.slideshow_presence_every_n,
+        slideshow_presence_duration_seconds: settings.slideshow_presence_duration_seconds,
       });
     } catch (error) {
       console.error('Error fetching public settings:', error);
@@ -45,7 +48,10 @@ class SettingsController {
         colorNotCheckedIn,
         colorPastSession,
         colorActiveSession,
-        colorCurrentTime
+        colorCurrentTime,
+        slideshowIntervalSeconds,
+        slideshowPresenceEveryN,
+        slideshowPresenceDurationSeconds,
       } = req.body;
 
       // Validate window with current values to provide clearer error messages
@@ -66,6 +72,9 @@ class SettingsController {
         colorPastSession,
         colorActiveSession,
         colorCurrentTime,
+        slideshowIntervalSeconds,
+        slideshowPresenceEveryN,
+        slideshowPresenceDurationSeconds,
       });
 
       // Log the action
@@ -82,7 +91,10 @@ class SettingsController {
             colorNotCheckedIn,
             colorPastSession,
             colorActiveSession,
-            colorCurrentTime
+            colorCurrentTime,
+            slideshowIntervalSeconds,
+            slideshowPresenceEveryN,
+            slideshowPresenceDurationSeconds,
           },
         });
       }

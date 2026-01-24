@@ -52,6 +52,33 @@ async function initDatabase() {
     `);
     console.log('✓ Created attendance_sessions table');
 
+    // Create duration trigger to ensure duration_minutes is calculated
+    await client.query(`
+      CREATE OR REPLACE FUNCTION set_duration_minutes()
+      RETURNS trigger AS $$
+      BEGIN
+        IF NEW.check_in_time IS NOT NULL AND NEW.check_out_time IS NOT NULL THEN
+          NEW.duration_minutes := GREATEST(0, ROUND(EXTRACT(EPOCH FROM (NEW.check_out_time - NEW.check_in_time)) / 60.0));
+        END IF;
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+    `);
+
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_trigger WHERE tgname = 'set_duration_minutes_trigger'
+        ) THEN
+          CREATE TRIGGER set_duration_minutes_trigger
+          BEFORE INSERT OR UPDATE ON attendance_sessions
+          FOR EACH ROW
+          EXECUTE FUNCTION set_duration_minutes();
+        END IF;
+      END $$;
+    `);
+
     // Create reflections table
     await client.query(`
       CREATE TABLE IF NOT EXISTS reflections (
@@ -71,6 +98,9 @@ async function initDatabase() {
         reflection_prompt TEXT NOT NULL,
         presence_start_hour INT NOT NULL DEFAULT 8 CHECK (presence_start_hour >= 0 AND presence_start_hour <= 23),
         presence_end_hour INT NOT NULL DEFAULT 24 CHECK (presence_end_hour > 0 AND presence_end_hour <= 24),
+        slideshow_interval_seconds INT NOT NULL DEFAULT 10,
+        slideshow_presence_every_n INT NOT NULL DEFAULT 2,
+        slideshow_presence_duration_seconds INT NOT NULL DEFAULT 30,
         CHECK (presence_start_hour < presence_end_hour),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -110,9 +140,12 @@ async function initDatabase() {
     if (parseInt(settingsCheck.rows[0].count) === 0) {
       const { v4: uuidv4 } = require('uuid');
       await client.query(`
-        INSERT INTO system_settings (id, reflection_prompt, presence_start_hour, presence_end_hour)
-        VALUES ($1, $2, $3, $4)
-      `, [uuidv4(), 'Please reflect on what you learned or accomplished today.', 8, 24]);
+        INSERT INTO system_settings (
+          id, reflection_prompt, presence_start_hour, presence_end_hour,
+          slideshow_interval_seconds, slideshow_presence_every_n, slideshow_presence_duration_seconds
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `, [uuidv4(), 'Please reflect on what you learned or accomplished today.', 8, 24, 10, 2, 30]);
       console.log('✓ Inserted default system settings');
     }
 

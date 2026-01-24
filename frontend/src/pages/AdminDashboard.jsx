@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api, { userApi, settingsApi, contactApi, attendanceApi } from '../services/api';
+import api, { userApi, settingsApi, contactApi, attendanceApi, slideshowApi } from '../services/api';
 import AdminNav from '../components/AdminNav';
 import './AdminDashboard.css';
 
@@ -1417,11 +1417,20 @@ function SettingsTab() {
   const [colorPastSession, setColorPastSession] = useState('#4fd1c5');
   const [colorActiveSession, setColorActiveSession] = useState('#f6e05e');
   const [colorCurrentTime, setColorCurrentTime] = useState('#ff6b6b');
+  const [slideshowIntervalSeconds, setSlideshowIntervalSeconds] = useState(10);
+  const [slideshowPresenceEveryN, setSlideshowPresenceEveryN] = useState(2);
+  const [slideshowPresenceDurationSeconds, setSlideshowPresenceDurationSeconds] = useState(30);
+  const [slides, setSlides] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState('');
+  const [deletingSlide, setDeletingSlide] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     fetchSettings();
+    fetchSlides();
   }, []);
 
   const fetchSettings = async () => {
@@ -1454,10 +1463,28 @@ function SettingsTab() {
       if (response.data.color_current_time) {
         setColorCurrentTime(response.data.color_current_time);
       }
+      if (response.data.slideshow_interval_seconds !== undefined) {
+        setSlideshowIntervalSeconds(response.data.slideshow_interval_seconds);
+      }
+      if (response.data.slideshow_presence_every_n !== undefined) {
+        setSlideshowPresenceEveryN(response.data.slideshow_presence_every_n);
+      }
+      if (response.data.slideshow_presence_duration_seconds !== undefined) {
+        setSlideshowPresenceDurationSeconds(response.data.slideshow_presence_duration_seconds);
+      }
     } catch (err) {
       setError('Failed to load settings: ' + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSlides = async () => {
+    try {
+      const response = await slideshowApi.list();
+      setSlides(response.data?.images || []);
+    } catch (err) {
+      setUploadError('Failed to load slideshow images');
     }
   };
 
@@ -1479,11 +1506,48 @@ function SettingsTab() {
         colorPastSession,
         colorActiveSession,
         colorCurrentTime,
+        slideshowIntervalSeconds: Number(slideshowIntervalSeconds),
+        slideshowPresenceEveryN: Number(slideshowPresenceEveryN),
+        slideshowPresenceDurationSeconds: Number(slideshowPresenceDurationSeconds),
       });
       alert('Settings updated successfully');
       fetchSettings();
     } catch (err) {
       setError('Failed to update settings: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleUploadSlide = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadError('');
+    setUploadSuccess('');
+    try {
+      await slideshowApi.upload(file);
+      setUploadSuccess('Image uploaded successfully');
+      await fetchSlides();
+    } catch (err) {
+      setUploadError(err.response?.data?.error || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDeleteSlide = async (name) => {
+    if (!window.confirm('Delete this slideshow image?')) return;
+    setDeletingSlide(name);
+    setUploadError('');
+    setUploadSuccess('');
+    try {
+      await slideshowApi.delete(name);
+      setUploadSuccess('Image deleted successfully');
+      await fetchSlides();
+    } catch (err) {
+      setUploadError(err.response?.data?.error || 'Failed to delete image');
+    } finally {
+      setDeletingSlide('');
     }
   };
 
@@ -1591,6 +1655,88 @@ function SettingsTab() {
                 style={{ width: '100%', height: '40px', cursor: 'pointer' }}
               />
             </div>
+          </div>
+
+          <h3 style={{ marginTop: '2.5rem', marginBottom: '1rem' }}>Slideshow Settings</h3>
+
+          <div className="slideshow-settings-grid">
+            <div className="form-group">
+              <label>Image Interval (seconds)</label>
+              <input
+                type="number"
+                min="1"
+                max="3600"
+                value={slideshowIntervalSeconds}
+                onChange={(e) => setSlideshowIntervalSeconds(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Show Presence Board Every N Images</label>
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={slideshowPresenceEveryN}
+                onChange={(e) => setSlideshowPresenceEveryN(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Presence Board Duration (seconds)</label>
+              <input
+                type="number"
+                min="1"
+                max="3600"
+                value={slideshowPresenceDurationSeconds}
+                onChange={(e) => setSlideshowPresenceDurationSeconds(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="slideshow-upload-card">
+            <div className="slideshow-upload-header">
+              <h4>Slideshow Images</h4>
+              <span>PNG/JPG only, max 5MB</span>
+            </div>
+
+            {uploadError && <div className="alert alert-error">{uploadError}</div>}
+            {uploadSuccess && <div className="alert alert-success">{uploadSuccess}</div>}
+
+            <div className="form-group">
+              <input
+                type="file"
+                accept="image/png,image/jpeg"
+                onChange={handleUploadSlide}
+                disabled={uploading}
+              />
+            </div>
+
+            {slides.length === 0 ? (
+              <p className="slideshow-empty">No slideshow images uploaded yet.</p>
+            ) : (
+              <div className="slideshow-grid">
+                {slides.map((slide) => (
+                  <div key={slide.name} className="slideshow-item">
+                    <div
+                      className="slideshow-thumb"
+                      style={{ backgroundImage: `url(${slide.url})` }}
+                    />
+                    <div className="slideshow-item-meta">
+                      <span title={slide.name}>{slide.name}</span>
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleDeleteSlide(slide.name)}
+                        disabled={deletingSlide === slide.name}
+                      >
+                        {deletingSlide === slide.name ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="form-actions">

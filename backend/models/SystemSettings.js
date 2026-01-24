@@ -10,7 +10,10 @@ const DEFAULTS = {
   colorNotCheckedIn: '#a0aec0',
   colorPastSession: '#4fd1c5',
   colorActiveSession: '#f6e05e',
-  colorCurrentTime: '#ff6b6b'
+  colorCurrentTime: '#ff6b6b',
+  slideshowIntervalSeconds: 10,
+  slideshowPresenceEveryN: 2,
+  slideshowPresenceDurationSeconds: 30,
 };
 
 class SystemSettings {
@@ -26,6 +29,9 @@ class SystemSettings {
       color_past_session: row.color_past_session ?? DEFAULTS.colorPastSession,
       color_active_session: row.color_active_session ?? DEFAULTS.colorActiveSession,
       color_current_time: row.color_current_time ?? DEFAULTS.colorCurrentTime,
+      slideshow_interval_seconds: row.slideshow_interval_seconds ?? DEFAULTS.slideshowIntervalSeconds,
+      slideshow_presence_every_n: row.slideshow_presence_every_n ?? DEFAULTS.slideshowPresenceEveryN,
+      slideshow_presence_duration_seconds: row.slideshow_presence_duration_seconds ?? DEFAULTS.slideshowPresenceDurationSeconds,
     };
   }
 
@@ -41,16 +47,23 @@ class SystemSettings {
     return this.withDefaults(result.rows[0]);
   }
 
-  static async create(reflectionPrompt, presenceStartHour = DEFAULTS.presenceStartHour, presenceEndHour = DEFAULTS.presenceEndHour, colors = {}) {
+  static async create(
+    reflectionPrompt,
+    presenceStartHour = DEFAULTS.presenceStartHour,
+    presenceEndHour = DEFAULTS.presenceEndHour,
+    colors = {},
+    slideshow = {}
+  ) {
     const id = uuidv4();
     
     const query = `
       INSERT INTO system_settings (
         id, reflection_prompt, presence_start_hour, presence_end_hour,
         color_student_checked_in, color_mentor_checked_in, color_not_checked_in,
-        color_past_session, color_active_session, color_current_time
+        color_past_session, color_active_session, color_current_time,
+        slideshow_interval_seconds, slideshow_presence_every_n, slideshow_presence_duration_seconds
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `;
     
@@ -64,13 +77,29 @@ class SystemSettings {
       colors.colorNotCheckedIn ?? DEFAULTS.colorNotCheckedIn,
       colors.colorPastSession ?? DEFAULTS.colorPastSession,
       colors.colorActiveSession ?? DEFAULTS.colorActiveSession,
-      colors.colorCurrentTime ?? DEFAULTS.colorCurrentTime
+      colors.colorCurrentTime ?? DEFAULTS.colorCurrentTime,
+      slideshow.slideshowIntervalSeconds ?? DEFAULTS.slideshowIntervalSeconds,
+      slideshow.slideshowPresenceEveryN ?? DEFAULTS.slideshowPresenceEveryN,
+      slideshow.slideshowPresenceDurationSeconds ?? DEFAULTS.slideshowPresenceDurationSeconds,
     ];
     const result = await db.query(query, values);
     return this.withDefaults(result.rows[0]);
   }
 
-  static async update({ reflectionPrompt, presenceStartHour, presenceEndHour, colorStudentCheckedIn, colorMentorCheckedIn, colorNotCheckedIn, colorPastSession, colorActiveSession, colorCurrentTime }) {
+  static async update({
+    reflectionPrompt,
+    presenceStartHour,
+    presenceEndHour,
+    colorStudentCheckedIn,
+    colorMentorCheckedIn,
+    colorNotCheckedIn,
+    colorPastSession,
+    colorActiveSession,
+    colorCurrentTime,
+    slideshowIntervalSeconds,
+    slideshowPresenceEveryN,
+    slideshowPresenceDurationSeconds,
+  }) {
     // Get current settings
     const current = await this.get();
     const nextReflectionPrompt = reflectionPrompt ?? current.reflection_prompt;
@@ -82,6 +111,9 @@ class SystemSettings {
     const nextColorPastSession = colorPastSession ?? current.color_past_session;
     const nextColorActiveSession = colorActiveSession ?? current.color_active_session;
     const nextColorCurrentTime = colorCurrentTime ?? current.color_current_time;
+    const nextSlideshowIntervalSeconds = slideshowIntervalSeconds ?? current.slideshow_interval_seconds;
+    const nextSlideshowPresenceEveryN = slideshowPresenceEveryN ?? current.slideshow_presence_every_n;
+    const nextSlideshowPresenceDurationSeconds = slideshowPresenceDurationSeconds ?? current.slideshow_presence_duration_seconds;
     
     const query = `
       UPDATE system_settings 
@@ -94,8 +126,11 @@ class SystemSettings {
           color_past_session = $7,
           color_active_session = $8,
           color_current_time = $9,
+          slideshow_interval_seconds = $10,
+          slideshow_presence_every_n = $11,
+          slideshow_presence_duration_seconds = $12,
           updated_at = CURRENT_TIMESTAMP
-      WHERE id = $10
+      WHERE id = $13
       RETURNING *
     `;
     
@@ -109,6 +144,9 @@ class SystemSettings {
       nextColorPastSession,
       nextColorActiveSession,
       nextColorCurrentTime,
+      nextSlideshowIntervalSeconds,
+      nextSlideshowPresenceEveryN,
+      nextSlideshowPresenceDurationSeconds,
       current.id
     ]);
     return this.withDefaults(result.rows[0]);

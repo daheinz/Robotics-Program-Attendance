@@ -21,6 +21,8 @@ const settingsRoutes = require('./routes/settings');
 const coreHoursRoutes = require('./routes/coreHours');
 const absencesRoutes = require('./routes/absences');
 const reportsRoutes = require('./routes/reports');
+const slideshowRoutes = require('./routes/slideshow');
+const { getSlidesDir } = require('./controllers/slideshowController');
 
 // Initialize Express app
 const app = express();
@@ -69,6 +71,8 @@ app.use('/attendance', attendanceRoutes);
 app.use('/', contactRoutes); // Includes /users/:id/contacts and /contacts/:contactId
 app.use('/reflections', reflectionRoutes);
 app.use('/settings', settingsRoutes);
+app.use('/slideshow', slideshowRoutes);
+app.use('/slideshow-assets', express.static(getSlidesDir()));
 app.use('/core-hours', coreHoursRoutes);
 app.use('/absences', absencesRoutes);
 app.use('/reports', reportsRoutes);
