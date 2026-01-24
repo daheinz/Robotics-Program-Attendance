@@ -71,8 +71,17 @@ function Leaderboard() {
         if (diff !== 0) return diff;
         return String(a.alias || '').localeCompare(String(b.alias || ''));
       });
+      const withRankChanges = augmented.map((student, index) => {
+        const currentRank = index + 1;
+        const baselineRank = student.baseline_rank;
+        const rankDelta = baselineRank ? baselineRank - currentRank : 0;
+        return {
+          ...student,
+          rank_delta: rankDelta,
+        };
+      });
 
-      setLeaderboard(augmented);
+      setLeaderboard(withRankChanges);
     } catch (err) {
       console.error('Error loading leaderboard:', err);
       setError('Failed to load leaderboard data');
@@ -84,9 +93,16 @@ function Leaderboard() {
   };
 
   const formatHours = (hours) => {
-    if (!hours) return '0.00';
+    if (!hours) return '0:00';
     const numHours = typeof hours === 'string' ? parseFloat(hours) : hours;
-    return isNaN(numHours) ? '0.00' : numHours.toFixed(2);
+    if (isNaN(numHours)) return '0:00';
+    const wholeHours = Math.floor(numHours);
+    let minutes = Math.round((numHours - wholeHours) * 60);
+    if (minutes === 60) {
+      minutes = 0;
+      return `${wholeHours + 1}:${String(minutes).padStart(2, '0')}`;
+    }
+    return `${wholeHours}:${String(minutes).padStart(2, '0')}`;
   };
 
   const formatDate = (dateString) => {
@@ -146,14 +162,25 @@ function Leaderboard() {
                           </span>
                         </div>
                         <div className="col-name">
-                          <span className="student-name">{student.alias}</span>
+                          <span className="student-name">
+                            {student.rank_delta > 0 && (
+                              <span className="rank-change up" aria-label="Rank up">▲</span>
+                            )}
+                            {student.rank_delta < 0 && (
+                              <span className="rank-change down" aria-label="Rank down">▼</span>
+                            )}
+                            {student.rank_delta === 0 && student.baseline_rank && (
+                              <span className="rank-change same" aria-label="Rank unchanged">■</span>
+                            )}
+                            {student.alias}
+                          </span>
                         </div>
                         <div className="col-sessions">
                           {student.session_count}
                         </div>
                         <div className="col-hours">
                           <span className="hours-value">{formatHours(student.total_hours_live ?? student.total_hours)}</span>
-                          <span className="hours-label">hrs</span>
+                          <span className="hours-label">h:m</span>
                         </div>
                       </div>
                     ))}

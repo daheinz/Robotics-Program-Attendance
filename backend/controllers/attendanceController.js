@@ -2,6 +2,16 @@ const AttendanceSession = require('../models/AttendanceSession');
 const AuditLog = require('../models/AuditLog');
 const Reflection = require('../models/Reflection');
 
+const leaderboardSnapshots = {};
+
+const getLocalDateString = () => {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 class AttendanceController {
   // GET /attendance/range?start_date&end_date&user_ids (comma-separated)
   static async getByRange(req, res) {
@@ -576,8 +586,30 @@ class AttendanceController {
   static async getLeaderboard(req, res) {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+      const snapshotDate = getLocalDateString();
+      const snapshotKey = `${snapshotDate}:${limit}`;
+
+      if (!leaderboardSnapshots[snapshotKey]) {
+        const baseline = await AttendanceSession.getLeaderboard(limit);
+        const positions = {};
+        baseline.forEach((entry, index) => {
+          positions[String(entry.id)] = index + 1;
+        });
+        leaderboardSnapshots[snapshotKey] = {
+          date: snapshotDate,
+          positions,
+        };
+      }
+
       const leaderboard = await AttendanceSession.getLeaderboard(limit);
-      res.json(leaderboard);
+      const baselinePositions = leaderboardSnapshots[snapshotKey].positions || {};
+
+      const enriched = leaderboard.map((entry) => ({
+        ...entry,
+        baseline_rank: baselinePositions[String(entry.id)] ?? null,
+      }));
+
+      res.json(enriched);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       res.status(500).json({ error: 'Failed to fetch leaderboard' });

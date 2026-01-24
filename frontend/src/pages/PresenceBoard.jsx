@@ -261,7 +261,7 @@ function PresenceBoard() {
       '--color-current-time': colors.currentTime
     }}>
       <header className="board-header">
-        <h1>Presence Timeline <span className="update-time">(Last updated: {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })})</span></h1>
+        <h1>Presence Timeline <span className="update-time">(Last updated: {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })})</span></h1>
         <a href="/kiosk" className="kiosk-link">
           Return to Kiosk
         </a>
