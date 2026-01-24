@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { settingsApi, slideshowApi } from '../services/api';
 import PresenceBoard from './PresenceBoard';
 import './SlideshowPage.css';
@@ -14,9 +14,13 @@ function SlideshowPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [shownSincePresence, setShownSincePresence] = useState(0);
   const [mode, setMode] = useState('image');
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [settings, setSettings] = useState(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const modeStartRef = useRef(Date.now());
+  const modeDurationRef = useRef(DEFAULTS.intervalSeconds * 1000);
+  const lastModeRef = useRef('image');
 
   const normalizedSettings = useMemo(() => {
     const intervalSeconds = Math.max(1, Number(settings.intervalSeconds) || DEFAULTS.intervalSeconds);
@@ -44,6 +48,8 @@ function SlideshowPage() {
         setCurrentIndex(0);
         setShownSincePresence(0);
         setMode('image');
+        modeStartRef.current = Date.now();
+        modeDurationRef.current = DEFAULTS.intervalSeconds * 1000;
       } catch (err) {
         setError('Failed to load slideshow settings or images.');
       } finally {
@@ -54,23 +60,19 @@ function SlideshowPage() {
     load();
   }, []);
 
-  useEffect(() => {
-    const intervalId = setInterval(async () => {
-      try {
-        const response = await settingsApi.getPublic();
-        const data = response.data || {};
-        setSettings({
-          intervalSeconds: data.slideshow_interval_seconds ?? DEFAULTS.intervalSeconds,
-          presenceEveryN: data.slideshow_presence_every_n ?? DEFAULTS.presenceEveryN,
-          presenceDurationSeconds: data.slideshow_presence_duration_seconds ?? DEFAULTS.presenceDurationSeconds,
-        });
-      } catch (err) {
-        // Silent refresh failure
-      }
-    }, 30000);
-
-    return () => clearInterval(intervalId);
-  }, []);
+  const refreshSettings = async () => {
+    try {
+      const response = await settingsApi.getPublic();
+      const data = response.data || {};
+      setSettings({
+        intervalSeconds: data.slideshow_interval_seconds ?? DEFAULTS.intervalSeconds,
+        presenceEveryN: data.slideshow_presence_every_n ?? DEFAULTS.presenceEveryN,
+        presenceDurationSeconds: data.slideshow_presence_duration_seconds ?? DEFAULTS.presenceDurationSeconds,
+      });
+    } catch (err) {
+      // Silent refresh failure
+    }
+  };
 
   useEffect(() => {
     const intervalId = setInterval(async () => {
@@ -103,6 +105,8 @@ function SlideshowPage() {
     if (loading) return;
 
     if (mode === 'presence') {
+      modeStartRef.current = Date.now();
+      modeDurationRef.current = normalizedSettings.presenceDurationSeconds * 1000;
       const timer = setTimeout(() => {
         setMode('image');
       }, normalizedSettings.presenceDurationSeconds * 1000);
@@ -113,6 +117,8 @@ function SlideshowPage() {
       return undefined;
     }
 
+    modeStartRef.current = Date.now();
+    modeDurationRef.current = normalizedSettings.intervalSeconds * 1000;
     const timer = setTimeout(() => {
       const nextIndex = (currentIndex + 1) % images.length;
       const nextCount = shownSincePresence + 1;
@@ -130,6 +136,26 @@ function SlideshowPage() {
 
     return () => clearTimeout(timer);
   }, [loading, mode, images.length, currentIndex, shownSincePresence, normalizedSettings]);
+
+  useEffect(() => {
+    if (loading) return;
+    if (mode === 'presence' && lastModeRef.current !== 'presence') {
+      refreshSettings();
+    }
+    lastModeRef.current = mode;
+  }, [loading, mode]);
+
+  useEffect(() => {
+    if (loading) return;
+    const updateRemaining = () => {
+      const elapsed = Date.now() - modeStartRef.current;
+      const remainingMs = Math.max(0, modeDurationRef.current - elapsed);
+      setRemainingSeconds(Math.ceil(remainingMs / 1000));
+    };
+    updateRemaining();
+    const intervalId = setInterval(updateRemaining, 250);
+    return () => clearInterval(intervalId);
+  }, [loading, mode]);
 
   if (loading) {
     return (
@@ -159,6 +185,7 @@ function SlideshowPage() {
     return (
       <div className="slideshow-page slideshow-presence">
         <PresenceBoard />
+        <div className="slideshow-countdown">{remainingSeconds}s</div>
       </div>
     );
   }
@@ -172,6 +199,7 @@ function SlideshowPage() {
         src={currentImage.url}
         alt={currentImage.name}
       />
+      <div className="slideshow-countdown">{remainingSeconds}s</div>
     </div>
   );
 }
