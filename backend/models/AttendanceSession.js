@@ -224,6 +224,8 @@ class AttendanceSession {
       SELECT 
         a.*, 
         u.alias, 
+        u.first_name,
+        u.last_name,
         u.role, 
         r.text AS reflection_text
       FROM attendance_sessions a

@@ -19,4 +19,10 @@ router.get('/audit', reportController.getDetailedAuditReport);
 // GET /api/reports/future - Get future absences summary
 router.get('/future', reportController.getFutureAbsencesSummary);
 
+// GET /api/reports/attendance-sessions - Attendance sessions report
+router.get('/attendance-sessions', reportController.getAttendanceSessionsReport);
+
+// GET /api/reports/absences - Absences report
+router.get('/absences', reportController.getAbsencesReport);
+
 module.exports = router;

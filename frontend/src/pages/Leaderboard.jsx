@@ -74,7 +74,7 @@ function Leaderboard() {
       const withRankChanges = augmented.map((student, index) => {
         const currentRank = index + 1;
         const baselineRank = student.baseline_rank;
-        const rankDelta = baselineRank ? baselineRank - currentRank : 0;
+        const rankDelta = baselineRank && !student.snapshot_created ? baselineRank - currentRank : 0;
         return {
           ...student,
           rank_delta: rankDelta,
@@ -163,13 +163,13 @@ function Leaderboard() {
                         </div>
                         <div className="col-name">
                           <span className="student-name">
-                            {student.rank_delta > 0 && (
+                            {student.rank_delta > 0 && !student.snapshot_created && (
                               <span className="rank-change up" aria-label="Rank up">▲</span>
                             )}
-                            {student.rank_delta < 0 && (
+                            {student.rank_delta < 0 && !student.snapshot_created && (
                               <span className="rank-change down" aria-label="Rank down">▼</span>
                             )}
-                            {student.rank_delta === 0 && student.baseline_rank && (
+                            {student.rank_delta === 0 && student.baseline_rank && !student.snapshot_created && (
                               <span className="rank-change same" aria-label="Rank unchanged">■</span>
                             )}
                             {student.alias}

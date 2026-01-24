@@ -261,3 +261,84 @@ exports.getFutureAbsencesSummary = async (req, res, next) => {
     next(error);
   }
 };
+
+// Attendance sessions report (students or mentors)
+exports.getAttendanceSessionsReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate, role, userId } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'startDate and endDate are required' });
+    }
+
+    let userIds = [];
+    let user = null;
+
+    if (userId) {
+      user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      userIds = [userId];
+    } else if (role) {
+      let roles = [];
+      if (role === 'mentor-coach') {
+        roles = ['mentor', 'coach'];
+      } else {
+        roles = [role];
+      }
+      const users = await User.findByRoles(roles);
+      userIds = users.map((u) => u.id);
+    }
+
+    const sessions = await AttendanceSession.getSessionsByUsersAndDateRange(userIds, startDate, endDate);
+
+    res.json({
+      startDate,
+      endDate,
+      role: role || null,
+      user: user
+        ? { id: user.id, alias: user.alias, firstName: user.first_name, lastName: user.last_name, role: user.role }
+        : null,
+      sessions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Absences report (all students or single student)
+exports.getAbsencesReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate, seasonType = 'build', userId } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'startDate and endDate are required' });
+    }
+
+    let absences = [];
+    let user = null;
+
+    if (userId) {
+      user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      absences = await Absence.findForStudentReport(userId, startDate, endDate, seasonType);
+    } else {
+      absences = await Absence.findForReport(startDate, endDate, seasonType);
+    }
+
+    res.json({
+      startDate,
+      endDate,
+      seasonType,
+      user: user
+        ? { id: user.id, alias: user.alias, firstName: user.first_name, lastName: user.last_name, role: user.role }
+        : null,
+      absences,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -588,9 +588,11 @@ class AttendanceController {
       const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
       const snapshotDate = getLocalDateString();
       const snapshotKey = `${snapshotDate}:${limit}`;
+      let snapshotCreated = false;
+      let baseline = null;
 
       if (!leaderboardSnapshots[snapshotKey]) {
-        const baseline = await AttendanceSession.getLeaderboard(limit);
+        baseline = await AttendanceSession.getLeaderboard(limit);
         const positions = {};
         baseline.forEach((entry, index) => {
           positions[String(entry.id)] = index + 1;
@@ -599,14 +601,16 @@ class AttendanceController {
           date: snapshotDate,
           positions,
         };
+        snapshotCreated = true;
       }
 
-      const leaderboard = await AttendanceSession.getLeaderboard(limit);
+      const leaderboard = baseline || await AttendanceSession.getLeaderboard(limit);
       const baselinePositions = leaderboardSnapshots[snapshotKey].positions || {};
 
       const enriched = leaderboard.map((entry) => ({
         ...entry,
         baseline_rank: baselinePositions[String(entry.id)] ?? null,
+        snapshot_created: snapshotCreated,
       }));
 
       res.json(enriched);

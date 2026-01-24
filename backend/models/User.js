@@ -45,6 +45,19 @@ class User {
     return result.rows;
   }
 
+  static async findByRoles(roles = []) {
+    if (!roles || roles.length === 0) {
+      return [];
+    }
+    const query = `
+      SELECT * FROM users
+      WHERE is_active = true AND role = ANY($1)
+      ORDER BY alias ASC
+    `;
+    const result = await db.query(query, [roles]);
+    return result.rows;
+  }
+
   static async getActiveUsers() {
     const query = `
       SELECT id, alias, role 

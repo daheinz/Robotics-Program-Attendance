@@ -76,6 +76,25 @@ class Absence {
     return result.rows;
   }
 
+  static async findForStudentReport(studentId, startDate, endDate, seasonType = 'build') {
+    const query = `
+      SELECT 
+        a.*,
+        u.alias as student_alias,
+        u.first_name,
+        u.last_name
+      FROM absences a
+      JOIN users u ON a.student_id = u.id
+      WHERE a.student_id = $1
+        AND a.absence_date BETWEEN $2 AND $3
+        AND a.season_type = $4
+      ORDER BY a.absence_date DESC
+    `;
+
+    const result = await db.query(query, [studentId, startDate, endDate, seasonType]);
+    return result.rows;
+  }
+
   // Get all unapproved absences
   static async findUnapproved() {
     const query = `
