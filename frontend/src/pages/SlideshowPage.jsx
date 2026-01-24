@@ -57,6 +57,24 @@ function SlideshowPage() {
   useEffect(() => {
     const intervalId = setInterval(async () => {
       try {
+        const response = await settingsApi.getPublic();
+        const data = response.data || {};
+        setSettings({
+          intervalSeconds: data.slideshow_interval_seconds ?? DEFAULTS.intervalSeconds,
+          presenceEveryN: data.slideshow_presence_every_n ?? DEFAULTS.presenceEveryN,
+          presenceDurationSeconds: data.slideshow_presence_duration_seconds ?? DEFAULTS.presenceDurationSeconds,
+        });
+      } catch (err) {
+        // Silent refresh failure
+      }
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      try {
         const response = await slideshowApi.list();
         const nextImages = response.data?.images || [];
         setImages((prev) => {
