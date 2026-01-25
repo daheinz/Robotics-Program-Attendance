@@ -136,6 +136,12 @@
   font-weight: 600;
 }
 
+.completed-session {
+  color: #000 !important;
+  background-color: var(--color-past-session, #4fd1c5) !important;
+  font-weight: 600;
+}
+
 .not-checked-in {
   color: #000 !important;
   background-color: var(--color-not-checked-in, #a0aec0) !important;

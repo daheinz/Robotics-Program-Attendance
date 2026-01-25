@@ -203,16 +203,19 @@ function PresenceBoard() {
   const hasUnexcused = (uid) => !!absences[uid] && absences[uid].status !== 'approved';
 
   const entries = Object.entries(combinedUsers);
+  const hasActiveSession = (user) => user.sessions.some(session => !session.check_out_time);
   // Group A: Coaches/Mentors present (must have sessions)
   const groupA = entries
     .filter(([_, u]) => (u.role === 'mentor' || u.role === 'coach') && u.sessions.length > 0)
     .sort((a, b) => a[1].alias.localeCompare(b[1].alias));
+  const groupAActive = groupA.filter(([_, u]) => hasActiveSession(u));
+  const groupAInactive = groupA.filter(([_, u]) => !hasActiveSession(u));
   // Group B: Students with sessions today (include excused as well)
   const groupB = entries
     .filter(([id, u]) => u.role === 'student' && u.sessions.length > 0)
     .sort((a, b) => {
-      const aActive = a[1].sessions.some(s => !s.check_out_time);
-      const bActive = b[1].sessions.some(s => !s.check_out_time);
+      const aActive = hasActiveSession(a[1]);
+      const bActive = hasActiveSession(b[1]);
       if (aActive !== bActive) return aActive ? -1 : 1;
       return a[1].alias.localeCompare(b[1].alias);
     });
@@ -446,15 +449,16 @@ function PresenceBoard() {
             return null;
           })}
           
-          {/* Group A: Coaches / Mentors (present only) */}
-          {groupA.map(([userId, user]) => {
+          {/* Group A: Coaches / Mentors (active) */}
+          {groupAActive.map(([userId, user]) => {
             const absence = absences[userId];
             const isExcusedAbsent = absence && absence.status === 'approved';
             const hasSession = user.sessions.length > 0;
+            const isActive = hasActiveSession(user);
             return (
               <div className={`timeline-row`} key={`A-${userId}`}>
                 <div className="status-col" aria-label="status" />
-                <div className={`timeline-label user-label ${hasSession ? 'mentor-coach-checked-in' : 'not-checked-in'}`}>
+                <div className={`timeline-label user-label ${hasSession ? (isActive ? 'mentor-coach-checked-in' : 'completed-session') : 'not-checked-in'}`}>
                   {user.alias} {user.role === 'mentor' ? '(Mentor)' : user.role === 'coach' ? '(Coach)' : ''}
                 </div>
                 <div className="timeline-bars">
@@ -480,6 +484,7 @@ function PresenceBoard() {
             const isExcusedAbsent = absence && absence.status === 'approved';
             const hasSession = user.sessions.length > 0;
             const status = coreHoursStatus[userId];
+            const isActive = hasActiveSession(user);
             return (
               <div className={`timeline-row`} key={`B-${userId}`}>
                 <div className="status-col" aria-label="status">
@@ -493,7 +498,7 @@ function PresenceBoard() {
                     <span className="status-icon unexcused">U</span>
                   )}
                 </div>
-                <div className={`timeline-label user-label ${hasSession ? 'student-checked-in' : 'not-checked-in'}`}>
+                <div className={`timeline-label user-label ${hasSession ? (isActive ? 'student-checked-in' : 'completed-session') : 'not-checked-in'}`}>
                   {user.alias}
                 </div>
                 <div className="timeline-bars">
@@ -558,6 +563,32 @@ function PresenceBoard() {
                 </div>
                 <div className="timeline-bars">
                   {/* Empty bars area to indicate no sessions */}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Group A (inactive): Coaches / Mentors who checked out */}
+          {groupAInactive.map(([userId, user]) => {
+            const hasSession = user.sessions.length > 0;
+            return (
+              <div className={`timeline-row`} key={`A-inactive-${userId}`}>
+                <div className="status-col" aria-label="status" />
+                <div className={`timeline-label user-label ${hasSession ? 'completed-session' : 'not-checked-in'}`}>
+                  {user.alias} {user.role === 'mentor' ? '(Mentor)' : user.role === 'coach' ? '(Coach)' : ''}
+                </div>
+                <div className="timeline-bars">
+                  {user.sessions.map((session, idx) => {
+                    const { left, width, isActive } = computeBarPosition(session.check_in_time, session.check_out_time);
+                    return (
+                      <div
+                        key={idx}
+                        className={`timeline-bar${isActive ? ' active' : ''}`}
+                        style={{ left: `${left}%`, width: `${width}%` }}
+                        title={`In: ${new Date(session.check_in_time).toLocaleTimeString()}${session.check_out_time ? `\nOut: ${new Date(session.check_out_time).toLocaleTimeString()}` : '\nStill on site'}`}
+                      ></div>
+                    );
+                  })}
                 </div>
               </div>
             );
