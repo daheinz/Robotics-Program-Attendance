@@ -4,6 +4,114 @@ import { kioskApi, contactApi, attendanceApi, absenceApi } from '../services/api
 import RoboticsIllustration from '../components/RoboticsIllustration';
 import './StudentDashboard.css';
 
+const GOODBYE_MESSAGES = [
+  'Power down safely, team.',
+  'See you next cycle.',
+  'Don’t forget to recharge your human batteries.',
+  'Log off and live your best analog life.',
+  'May your homework require zero troubleshooting.',
+  'Go forth and debug your evening.',
+  'Stay calibrated out there.',
+  'Avoid unplanned rapid unscheduled disassembly.',
+  'Walk safely — no autonomous mode in the hallways.',
+  'See you next build session, legends.',
+  'Don’t forget to hydrate your CPU.',
+  'May your dreams be free of wiring gremlins.',
+  'Go home before the mentors start glitching.',
+  'Thanks for today — your effort was 10/10, no notes.',
+  'Remember: safety glasses off, thinking caps on.',
+  'See you tomorrow, same bot time, same bot place.',
+  'Go home and let your neurons cool.',
+  'May your evening be free of stripped screws.',
+  'Don’t forget to charge your batteries — both kinds.',
+  'Powering down student subroutines… goodbye.',
+  'Go forth and be less chaotic than the pit.',
+  'See you next time, drivetrain dynamos.',
+  'Don’t let the door hit your bumper.',
+  'May your code compile on the first try tonight.',
+  'You survived practice — reward yourself accordingly.',
+  'Time to switch from robot mode to human mode.',
+  'Go home before the robot starts missing you.',
+  'Thanks for building cool stuff today.',
+  'See you later, champions of controlled chaos.',
+  'Don’t forget your water bottle… again.',
+  'May your evening be more stable than our prototype.',
+  'Go home and brag about your robot to someone.',
+  'See you next meeting — bring your A‑game and maybe snacks.',
+  'Time to leave the shop before the zip ties unionize.',
+  'Stay awesome, stay curious, stay unbroken.',
+  'Go recharge — you’ve earned it.',
+  'See you later, future engineers.',
+  'Don’t forget to unpair from Bluetooth on your way out.',
+  'May your night be free of unexpected exceptions.',
+  'Go home before the mentors start speaking in binary.',
+  'Thanks for keeping the robot (mostly) in one piece today.',
+  'See you next time — same chaos, new problems.',
+  'Don’t forget to unplug the soldering iron of life.',
+  'May your homework be easier than aligning a shaft collar.',
+  'Go home and let your brain defragment.',
+  'See you later, code wizards.',
+  'Don’t forget: safety never sleeps, but you should.',
+  'May your dinner be more reliable than our intake.',
+  'Go forth and avoid cross-threading anything.',
+  'See you next meeting — bring your best ideas.',
+  'Time to leave the lab before the robot gains sentience.',
+  'Stay sharp, stay safe, stay servo‑smooth.',
+  'Go home and practice your victory pose.',
+  'See you later, mechanical masterminds.',
+  'Don’t forget to return your tools… looking at you.',
+  'May your evening be free of burnt motors.',
+  'Go home and let your creativity idle.',
+  'See you next time — we’ll build something even cooler.',
+  'Don’t forget to update your mental firmware.',
+  'May your night be free of loose bolts.',
+  'Go forth and be the autonomous version of yourself.',
+  'See you later, champions of torque.',
+  'Don’t forget to clean your shoes — the shop floor is judging you.',
+  'May your dreams be full of perfect cycles.',
+  'Go home before the robot starts asking for snacks.',
+  'See you next time — bring your brain and your enthusiasm.',
+  'Don’t forget to unstick the duct tape from your soul.',
+  'May your evening be smoother than a well‑tuned PID loop.',
+  'Go forth and avoid unnecessary friction.',
+  'See you later, wiring warriors.',
+  'Don’t forget to stretch — robots aren’t the only ones that need maintenance.',
+  'May your night be free of CAN bus errors.',
+  'Go home and let your creativity reboot.',
+  'See you next time — we’ll conquer the next challenge.',
+  'Don’t forget to take your hoodie — we have enough lost‑and‑found already.',
+  'May your evening be more stable than our prototype chassis.',
+  'Go forth and be the spark that ignites innovation.',
+  'See you later, gear‑grinding geniuses.',
+  'Don’t forget to check your pockets for hex keys.',
+  'May your night be free of stripped screws.',
+  'Go home and let your imagination idle.',
+  'See you next time — the robot believes in you.',
+  'Don’t forget to power down gracefully.',
+  'May your evening be full of good vibes and good voltage.',
+  'Go forth and avoid unnecessary debugging.',
+  'See you later, champions of controlled torque.',
+  'Don’t forget to leave the stress in the shop.',
+  'May your night be free of jammed bearings.',
+  'Go home and let your brain cool to operating temperature.',
+  'See you next time — bring your brilliance.',
+  'Don’t forget to take your backpack — again.',
+  'May your evening be smoother than a perfectly aligned drivetrain.',
+  'Go forth and be the human version of a well‑tuned robot.',
+  'See you later, innovators.',
+  'Don’t forget to unplug from robot mode.',
+  'May your night be free of unexpected vibrations.',
+  'Go home and let your creativity recharge.',
+  'See you next time — we’ll build the future together.',
+  'Don’t forget to take your snacks — ants love robotics too.',
+  'May your evening be full of inspiration, not error messages.',
+];
+
+const getRandomGoodbye = () => {
+  const index = Math.floor(Math.random() * GOODBYE_MESSAGES.length);
+  return GOODBYE_MESSAGES[index];
+};
+
 function StudentDashboard({ userName, userId, userRole, onLogout }) {
   const [checkedIn, setCheckedIn] = useState(false);
   const [currentSession, setCurrentSession] = useState(null);
@@ -134,11 +242,12 @@ function StudentDashboard({ userName, userId, userRole, onLogout }) {
     setSuccess('');
     try {
       await kioskApi.checkOut(reflection);
-      setSuccess('Successfully checked out!');
+      setSuccess(getRandomGoodbye());
+      setLoading(false);
       // Auto-logout after successful check-out
       setTimeout(() => {
         if (onLogout) onLogout();
-      }, 1000);
+      }, 5000);
     } catch (err) {
       setError(err.response?.data?.error || 'Check-out failed');
       setLoading(false);
