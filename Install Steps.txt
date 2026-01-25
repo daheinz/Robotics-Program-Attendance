@@ -16,7 +16,6 @@ sudo systemctl restart rob-attendance-backend
 
 # sudo systemctl status rob-attendance-backend
 
-curl http://127.0.0.1:3000/health
 
 cd ../frontend
 
@@ -29,3 +28,5 @@ sudo cp -r dist/* /var/www/rob-attendance-site/
 sudo chown -R www-data:www-data /var/www/rob-attendance-site
 
 sudo systemctl reload nginx
+
+curl http://127.0.0.1:3000/health

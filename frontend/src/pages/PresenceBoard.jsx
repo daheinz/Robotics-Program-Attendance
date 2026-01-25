@@ -204,7 +204,69 @@ function PresenceBoard() {
   // Derive group membership
   const isExcused = (uid) => !!absences[uid] && absences[uid].status === 'approved';
   const hasUnexcused = (uid) => !!absences[uid] && absences[uid].status !== 'approved';
-  const getStatusForStudent = (uid) => coreHoursStatus[uid] ?? null;
+  const dayOfWeek = now.getDay();
+  const todaysCoreHours = coreHours.filter(ch => ch.day_of_week === dayOfWeek);
+
+  const computeCheckedInMinutes = (sessionsForUser, windowStart, windowEnd) => {
+    let total = 0;
+    for (const session of sessionsForUser || []) {
+      let sessionStart = new Date(session.check_in_time);
+      let sessionEnd = session.check_out_time ? new Date(session.check_out_time) : now;
+      if (sessionStart < windowStart) sessionStart = new Date(windowStart);
+      if (sessionEnd > windowEnd) sessionEnd = new Date(windowEnd);
+      if (sessionEnd > sessionStart) {
+        total += (sessionEnd - sessionStart) / (1000 * 60);
+      }
+    }
+    return total;
+  };
+
+  const getDisplayStatus = (uid, sessionsForUser) => {
+    const apiStatus = coreHoursStatus[uid] ?? null;
+    if (apiStatus !== null) return apiStatus;
+    if (isExcused(uid)) return 'excused_absent';
+    if (hasUnexcused(uid)) return 'unexcused_absent';
+    if (!todaysCoreHours || todaysCoreHours.length === 0) return null;
+
+    const sortedCoreHours = [...todaysCoreHours].sort((a, b) => a.start_time.localeCompare(b.start_time));
+    for (const coreHours of sortedCoreHours) {
+      const [startHour, startMin, startSec = 0] = coreHours.start_time.split(':').map(Number);
+      const [endHour, endMin, endSec = 0] = coreHours.end_time.split(':').map(Number);
+      const sessionStart = new Date(now);
+      sessionStart.setHours(startHour, startMin, startSec, 0);
+      const sessionEnd = new Date(now);
+      sessionEnd.setHours(endHour, endMin, endSec, 0);
+      if (sessionEnd < sessionStart) {
+        sessionEnd.setDate(sessionEnd.getDate() + 1);
+      }
+
+      if (now < sessionStart) return null;
+
+      if (now >= sessionEnd) {
+        const accruedMinutes = computeCheckedInMinutes(sessionsForUser, sessionStart, sessionEnd);
+        const totalMinutes = (sessionEnd - sessionStart) / (1000 * 60);
+        const requiredMinutes = Math.max(0, totalMinutes - 30);
+        return accruedMinutes >= requiredMinutes ? 'compliant' : 'unexcused_absent';
+      }
+
+      const graceWindowEnd = new Date(sessionStart.getTime() + 30 * 60 * 1000);
+      if (now < graceWindowEnd) return null;
+
+      if (sessionsForUser && sessionsForUser.length > 0) {
+        const earliestCheckIn = [...sessionsForUser]
+          .map(s => new Date(s.check_in_time))
+          .sort((a, b) => a - b)[0];
+        if (earliestCheckIn && earliestCheckIn > graceWindowEnd) {
+          return 'unexcused_absent';
+        }
+        return null;
+      }
+
+      return 'unexcused_absent';
+    }
+
+    return null;
+  };
 
   const entries = Object.entries(combinedUsers);
   const hasActiveSession = (user) => user.sessions.some(session => !session.check_out_time);
@@ -259,9 +321,6 @@ function PresenceBoard() {
   if (loading) {
     return <div className="loading">Loading presence board...</div>;
   }
-
-  const dayOfWeek = now.getDay();
-  const todaysCoreHours = coreHours.filter(ch => ch.day_of_week === dayOfWeek);
 
   return (
     <div className="presence-board" style={{
@@ -487,7 +546,7 @@ function PresenceBoard() {
             const absence = absences[userId];
             const isExcusedAbsent = absence && absence.status === 'approved';
             const hasSession = user.sessions.length > 0;
-            const status = getStatusForStudent(userId);
+            const status = getDisplayStatus(userId, user.sessions);
             const isActive = hasActiveSession(user);
             return (
               <div className={`timeline-row`} key={`B-${userId}`}>
@@ -526,7 +585,7 @@ function PresenceBoard() {
           {groupC.map(([userId, user]) => {
             const absence = absences[userId];
             const isExcusedAbsent = true;
-            const status = getStatusForStudent(userId);
+            const status = getDisplayStatus(userId, user.sessions);
             return (
               <div className={`timeline-row`} key={`C-${userId}`}>
                 <div className="status-col" aria-label="status">
@@ -554,7 +613,7 @@ function PresenceBoard() {
           {groupD.map(([userId, user]) => {
             const absence = absences[userId];
             const isUnexcused = !!absence && absence.status !== 'approved';
-            const status = getStatusForStudent(userId);
+            const status = getDisplayStatus(userId, user.sessions);
             return (
               <div className={`timeline-row`} key={`D-${userId}`}>
                 <div className="status-col" aria-label="status">
