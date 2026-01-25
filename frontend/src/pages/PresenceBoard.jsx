@@ -132,11 +132,11 @@ function PresenceBoard() {
       for (const student of students) {
         try {
           const response = await api.get(`/absences/public/status/${student.id}/${dateStr}`);
-          statusMap[student.id] = response.data.status;
+          statusMap[student.id] = response.data.status ?? null;
           console.log(`[PresenceBoard] ${student.alias}: ${response.data.status}`);
         } catch (err) {
-          // Default to compliant if error
-          statusMap[student.id] = 'compliant';
+          // Default to neutral if error
+          statusMap[student.id] = null;
           console.warn(`[PresenceBoard] Error loading status for ${student.alias}:`, err.message);
         }
       }
@@ -201,12 +201,7 @@ function PresenceBoard() {
   // Derive group membership
   const isExcused = (uid) => !!absences[uid] && absences[uid].status === 'approved';
   const hasUnexcused = (uid) => !!absences[uid] && absences[uid].status !== 'approved';
-  const getStatusForStudent = (uid, hasSession) => {
-    if (coreHoursStatus[uid]) return coreHoursStatus[uid];
-    if (isExcused(uid)) return 'excused_absent';
-    if (hasUnexcused(uid)) return 'unexcused_absent';
-    return hasSession ? 'compliant' : null;
-  };
+  const getStatusForStudent = (uid) => coreHoursStatus[uid] ?? null;
 
   const entries = Object.entries(combinedUsers);
   const hasActiveSession = (user) => user.sessions.some(session => !session.check_out_time);
@@ -489,12 +484,12 @@ function PresenceBoard() {
             const absence = absences[userId];
             const isExcusedAbsent = absence && absence.status === 'approved';
             const hasSession = user.sessions.length > 0;
-            const status = getStatusForStudent(userId, hasSession);
+            const status = getStatusForStudent(userId);
             const isActive = hasActiveSession(user);
             return (
               <div className={`timeline-row`} key={`B-${userId}`}>
                 <div className="status-col" aria-label="status">
-                  {status === 'compliant' && hasSession && (
+                  {status === 'compliant' && (
                     <span className="status-icon checkmark">✓</span>
                   )}
                   {status === 'excused_absent' && (
@@ -528,11 +523,11 @@ function PresenceBoard() {
           {groupC.map(([userId, user]) => {
             const absence = absences[userId];
             const isExcusedAbsent = true;
-            const status = getStatusForStudent(userId, user.sessions.length > 0);
+            const status = getStatusForStudent(userId);
             return (
               <div className={`timeline-row`} key={`C-${userId}`}>
                 <div className="status-col" aria-label="status">
-                  {status === 'compliant' && user.sessions.length > 0 && (
+                  {status === 'compliant' && (
                     <span className="status-icon checkmark">✓</span>
                   )}
                   {status === 'excused_absent' && (
@@ -556,11 +551,11 @@ function PresenceBoard() {
           {groupD.map(([userId, user]) => {
             const absence = absences[userId];
             const isUnexcused = !!absence && absence.status !== 'approved';
-            const status = getStatusForStudent(userId, user.sessions.length > 0);
+            const status = getStatusForStudent(userId);
             return (
               <div className={`timeline-row`} key={`D-${userId}`}>
                 <div className="status-col" aria-label="status">
-                  {status === 'compliant' && user.sessions.length > 0 && (
+                  {status === 'compliant' && (
                     <span className="status-icon checkmark">✓</span>
                   )}
                   {status === 'excused_absent' && (
