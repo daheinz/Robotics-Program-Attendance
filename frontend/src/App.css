@@ -559,6 +559,16 @@
   animation: successPop 0.4s ease-out, successGlow 1.6s ease-in-out 0.4s infinite;
 }
 
+.goodbye-message {
+  font-size: 2.7rem;
+  font-weight: 900;
+  padding: 2.5rem 3rem;
+  border-width: 2px;
+  letter-spacing: 1px;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+  animation: successPop 0.4s ease-out, successGlow 1.4s ease-in-out 0.4s infinite, successFloat 2.4s ease-in-out 0.4s infinite;
+}
+
 @keyframes successPop {
   0% {
     transform: scale(0.92);
@@ -576,5 +586,14 @@
   }
   50% {
     box-shadow: 0 18px 44px rgba(40, 167, 69, 0.65);
+  }
+}
+
+@keyframes successFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
   }
 }

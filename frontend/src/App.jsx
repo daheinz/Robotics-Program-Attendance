@@ -330,7 +330,7 @@ function MentorCoachDashboard({ userName, userId, userRole, onLogout }) {
         <p className="role-badge">Role: {userRole}</p>
 
         {error && <div className="alert alert-error">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        {success && <div className="alert alert-success goodbye-message">{success}</div>}
 
         {/* Check-in/out Section */}
         <div className="checkin-section">

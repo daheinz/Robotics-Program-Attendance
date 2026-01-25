@@ -385,7 +385,7 @@ function StudentDashboard({ userName, userId, userRole, onLogout }) {
 
       <div className="student-container">
         {error && <div className="alert alert-error">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        {success && <div className="alert alert-success goodbye-message">{success}</div>}
 
         {activeTab === 'dashboard' && (
           <div className="dashboard-section">
