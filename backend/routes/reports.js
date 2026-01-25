@@ -25,4 +25,7 @@ router.get('/attendance-sessions', reportController.getAttendanceSessionsReport)
 // GET /api/reports/absences - Absences report
 router.get('/absences', reportController.getAbsencesReport);
 
+// GET /api/reports/student-totals - Student totals report
+router.get('/student-totals', reportController.getStudentTotalsReport);
+
 module.exports = router;

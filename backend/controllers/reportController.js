@@ -2,6 +2,7 @@ const Absence = require('../models/Absence');
 const User = require('../models/User');
 const AttendanceSession = require('../models/AttendanceSession');
 const CoreHours = require('../models/CoreHours');
+const db = require('../config/database');
 
 // Helper function to check if student met core hours requirement
 const checkCoreHoursCompliance = async (studentId, dateStr, dayOfWeek, seasonType = 'build') => {
@@ -337,6 +338,68 @@ exports.getAbsencesReport = async (req, res, next) => {
         ? { id: user.id, alias: user.alias, firstName: user.first_name, lastName: user.last_name, role: user.role }
         : null,
       absences,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Student totals report (durations + absences)
+exports.getStudentTotalsReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate, seasonType = 'build' } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'startDate and endDate are required' });
+    }
+
+    const query = `
+      SELECT
+        u.id,
+        u.alias,
+        u.first_name,
+        u.last_name,
+        COALESCE(att.total_minutes, 0) AS total_minutes,
+        COALESCE(abs.excused_count, 0) AS excused_count,
+        COALESCE(abs.unexcused_count, 0) AS unexcused_count
+      FROM users u
+      LEFT JOIN (
+        SELECT
+          a.user_id,
+          SUM(
+            CASE
+              WHEN a.check_out_time IS NOT NULL THEN COALESCE(a.duration_minutes, 0)
+              WHEN a.check_in_time IS NOT NULL THEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.check_in_time)) / 60
+              ELSE 0
+            END
+          ) AS total_minutes
+        FROM attendance_sessions a
+        WHERE a.check_in_time >= ($1::date)::timestamp
+          AND a.check_in_time < ($2::date + interval '1 day')::timestamp
+        GROUP BY a.user_id
+      ) att ON att.user_id = u.id
+      LEFT JOIN (
+        SELECT
+          a.student_id,
+          SUM(CASE WHEN a.status = 'approved' THEN 1 ELSE 0 END) AS excused_count,
+          SUM(CASE WHEN a.status = 'unapproved' THEN 1 ELSE 0 END) AS unexcused_count
+        FROM absences a
+        WHERE a.absence_date BETWEEN $1 AND $2
+          AND ($3::text IS NULL OR a.season_type = $3)
+        GROUP BY a.student_id
+      ) abs ON abs.student_id = u.id
+      WHERE u.is_active = true AND u.role = 'student'
+      ORDER BY u.alias ASC
+    `;
+
+    const params = [startDate, endDate, seasonType || null];
+    const result = await db.query(query, params);
+
+    res.json({
+      startDate,
+      endDate,
+      seasonType,
+      students: result.rows,
     });
   } catch (error) {
     next(error);
