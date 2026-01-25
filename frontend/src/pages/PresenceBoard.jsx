@@ -201,6 +201,12 @@ function PresenceBoard() {
   // Derive group membership
   const isExcused = (uid) => !!absences[uid] && absences[uid].status === 'approved';
   const hasUnexcused = (uid) => !!absences[uid] && absences[uid].status !== 'approved';
+  const getStatusForStudent = (uid) => {
+    if (coreHoursStatus[uid]) return coreHoursStatus[uid];
+    if (isExcused(uid)) return 'excused_absent';
+    if (hasUnexcused(uid)) return 'unexcused_absent';
+    return 'compliant';
+  };
 
   const entries = Object.entries(combinedUsers);
   const hasActiveSession = (user) => user.sessions.some(session => !session.check_out_time);
@@ -483,7 +489,7 @@ function PresenceBoard() {
             const absence = absences[userId];
             const isExcusedAbsent = absence && absence.status === 'approved';
             const hasSession = user.sessions.length > 0;
-            const status = coreHoursStatus[userId];
+            const status = getStatusForStudent(userId);
             const isActive = hasActiveSession(user);
             return (
               <div className={`timeline-row`} key={`B-${userId}`}>
@@ -522,12 +528,18 @@ function PresenceBoard() {
           {groupC.map(([userId, user]) => {
             const absence = absences[userId];
             const isExcusedAbsent = true;
-            const status = coreHoursStatus[userId];
+            const status = getStatusForStudent(userId);
             return (
               <div className={`timeline-row`} key={`C-${userId}`}>
                 <div className="status-col" aria-label="status">
+                  {status === 'compliant' && (
+                    <span className="status-icon checkmark">✓</span>
+                  )}
                   {status === 'excused_absent' && (
                     <span className="status-icon approved">E</span>
+                  )}
+                  {status === 'unexcused_absent' && (
+                    <span className="status-icon unexcused">U</span>
                   )}
                 </div>
                 <div className={`timeline-label user-label not-checked-in`}>
@@ -544,7 +556,7 @@ function PresenceBoard() {
           {groupD.map(([userId, user]) => {
             const absence = absences[userId];
             const isUnexcused = !!absence && absence.status !== 'approved';
-            const status = coreHoursStatus[userId];
+            const status = getStatusForStudent(userId);
             return (
               <div className={`timeline-row`} key={`D-${userId}`}>
                 <div className="status-col" aria-label="status">
