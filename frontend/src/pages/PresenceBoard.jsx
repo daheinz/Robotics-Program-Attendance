@@ -132,7 +132,9 @@ function PresenceBoard() {
       const statusMap = {};
       for (const student of students) {
         try {
-          const response = await api.get(`/absences/public/status/${student.id}/${dateStr}`);
+          const response = await api.get(`/absences/public/status/${student.id}/${dateStr}`, {
+            params: { seasonType },
+          });
           statusMap[student.id] = response.data.status ?? null;
           console.log(`[PresenceBoard] ${student.alias}: ${response.data.status}`);
         } catch (err) {
