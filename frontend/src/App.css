@@ -551,4 +551,30 @@
   background: #d4edda;
   color: #155724;
   border: 1px solid #c3e6cb;
+  font-size: 2.1rem;
+  font-weight: 800;
+  padding: 2rem 2.5rem;
+  text-align: center;
+  box-shadow: 0 14px 36px rgba(40, 167, 69, 0.4);
+  animation: successPop 0.4s ease-out, successGlow 1.6s ease-in-out 0.4s infinite;
+}
+
+@keyframes successPop {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes successGlow {
+  0%, 100% {
+    box-shadow: 0 14px 36px rgba(40, 167, 69, 0.4);
+  }
+  50% {
+    box-shadow: 0 18px 44px rgba(40, 167, 69, 0.65);
+  }
 }
