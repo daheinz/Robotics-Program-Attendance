@@ -308,6 +308,26 @@ exports.getCoreHoursStatus = async (req, res, next) => {
       console.log(`[getCoreHoursStatus] Session times: ${sessionStart.toISOString()} - ${sessionEnd.toISOString()}`);
       console.log(`[getCoreHoursStatus] Current time: ${now.toISOString()}`);
 
+      const ensureUnexcusedRecord = async (noteReason) => {
+        const coreHoursWindow = `${coreHours.start_time} - ${coreHours.end_time}`;
+        const notes = `System Generated - ${noteReason}. Core hours for this date were ${coreHoursWindow} and you were not present during that time frame.`;
+        try {
+          await Absence.create({
+            studentId,
+            absenceDate: date,
+            dayOfWeek,
+            status: 'unapproved',
+            notes,
+            seasonType,
+            createdBy: null,
+          });
+        } catch (err) {
+          if (err.code !== '23505') {
+            throw err;
+          }
+        }
+      };
+
       // State 1: Session hasn't started yet → NEUTRAL (no indicator)
       if (now < sessionStart) {
         console.log('[getCoreHoursStatus] Session not started yet; returning neutral state (no indicator)');
@@ -326,30 +346,40 @@ exports.getCoreHoursStatus = async (req, res, next) => {
           return res.json({ status: 'compliant' });
         } else {
           console.log('[getCoreHoursStatus] Requirement not met → unexcused_absent');
+          await ensureUnexcusedRecord('Failed to meet criteria for core hours');
           return res.json({ status: 'unexcused_absent' });
         }
       }
 
       // State 3: Session is in progress
-      const graceWindowMs = 31 * 60 * 1000; // 31 minutes in milliseconds
+      const graceWindowMs = 30 * 60 * 1000; // 30 minutes in milliseconds
       const graceWindowEnd = new Date(sessionStart.getTime() + graceWindowMs);
 
       // Within grace window → always neutral
       if (now < graceWindowEnd) {
-        console.log(`[getCoreHoursStatus] Within grace window (start+31); returning neutral. Grace ends at ${graceWindowEnd.toISOString()}`);
+        console.log(`[getCoreHoursStatus] Within grace window (start+30); returning neutral. Grace ends at ${graceWindowEnd.toISOString()}`);
         return res.json({ status: null });
       }
 
       // Past grace window, session still in progress
-      // If student has checked in (has any sessions), keep neutral until session ends
-      // Only mark unexcused if they have NO sessions at all
+      // If student checked in after grace window, mark unexcused
+      // If student has not checked in at all, mark unexcused
       if (sessions && sessions.length > 0) {
-        console.log('[getCoreHoursStatus] Past grace window but student has checked in; returning neutral until session ends');
+        const earliestCheckIn = sessions
+          .map(s => new Date(s.check_in_time))
+          .sort((a, b) => a - b)[0];
+        if (earliestCheckIn && earliestCheckIn > graceWindowEnd) {
+          console.log('[getCoreHoursStatus] Past grace window with late check-in; marking unexcused_absent');
+          await ensureUnexcusedRecord('Checked in more than 30 minutes after core hours start');
+          return res.json({ status: 'unexcused_absent' });
+        }
+        console.log('[getCoreHoursStatus] Past grace window but student checked in on time; returning neutral until session ends');
         return res.json({ status: null });
-      } else {
-        console.log('[getCoreHoursStatus] Past grace window (start+31) with no check-in; marking unexcused_absent');
-        return res.json({ status: 'unexcused_absent' });
       }
+
+      console.log('[getCoreHoursStatus] Past grace window with no check-in; marking unexcused_absent');
+      await ensureUnexcusedRecord('No check-in during core hours');
+      return res.json({ status: 'unexcused_absent' });
     }
 
     // Fallback: if no core hours matched or other edge case

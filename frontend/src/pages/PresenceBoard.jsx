@@ -42,6 +42,7 @@ function PresenceBoard() {
     const interval = setInterval(() => {
       setNow(new Date());
       loadSessions();
+      loadCoreHoursStatus();
     }, 30000);
     return () => clearInterval(interval);
   }, [seasonType]);
