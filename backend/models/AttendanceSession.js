@@ -275,11 +275,17 @@ class AttendanceSession {
         u.alias,
         u.first_name,
         u.last_name,
-        COALESCE(ROUND(SUM(COALESCE(a.duration_minutes, 0)) / 60.0, 2), 0) as total_hours,
+        COALESCE(ROUND(SUM(
+          CASE
+            WHEN a.check_out_time IS NOT NULL THEN COALESCE(a.duration_minutes, 0)
+            WHEN a.check_in_time IS NOT NULL THEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.check_in_time)) / 60
+            ELSE 0
+          END
+        ) / 60.0, 2), 0) as total_hours,
         COUNT(CASE WHEN a.check_out_time IS NOT NULL THEN 1 END) as session_count,
         MAX(a.check_in_time) as last_attendance
       FROM users u
-      LEFT JOIN attendance_sessions a ON u.id = a.user_id AND a.check_out_time IS NOT NULL
+      LEFT JOIN attendance_sessions a ON u.id = a.user_id
       WHERE u.role = 'student'
       GROUP BY u.id, u.alias, u.first_name, u.last_name
       ORDER BY total_hours DESC
