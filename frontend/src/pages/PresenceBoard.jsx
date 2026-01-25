@@ -201,11 +201,11 @@ function PresenceBoard() {
   // Derive group membership
   const isExcused = (uid) => !!absences[uid] && absences[uid].status === 'approved';
   const hasUnexcused = (uid) => !!absences[uid] && absences[uid].status !== 'approved';
-  const getStatusForStudent = (uid) => {
+  const getStatusForStudent = (uid, hasSession) => {
     if (coreHoursStatus[uid]) return coreHoursStatus[uid];
     if (isExcused(uid)) return 'excused_absent';
     if (hasUnexcused(uid)) return 'unexcused_absent';
-    return null;
+    return hasSession ? 'compliant' : null;
   };
 
   const entries = Object.entries(combinedUsers);
@@ -489,7 +489,7 @@ function PresenceBoard() {
             const absence = absences[userId];
             const isExcusedAbsent = absence && absence.status === 'approved';
             const hasSession = user.sessions.length > 0;
-            const status = getStatusForStudent(userId);
+            const status = getStatusForStudent(userId, hasSession);
             const isActive = hasActiveSession(user);
             return (
               <div className={`timeline-row`} key={`B-${userId}`}>
@@ -528,7 +528,7 @@ function PresenceBoard() {
           {groupC.map(([userId, user]) => {
             const absence = absences[userId];
             const isExcusedAbsent = true;
-            const status = getStatusForStudent(userId);
+            const status = getStatusForStudent(userId, user.sessions.length > 0);
             return (
               <div className={`timeline-row`} key={`C-${userId}`}>
                 <div className="status-col" aria-label="status">
@@ -556,7 +556,7 @@ function PresenceBoard() {
           {groupD.map(([userId, user]) => {
             const absence = absences[userId];
             const isUnexcused = !!absence && absence.status !== 'approved';
-            const status = getStatusForStudent(userId);
+            const status = getStatusForStudent(userId, user.sessions.length > 0);
             return (
               <div className={`timeline-row`} key={`D-${userId}`}>
                 <div className="status-col" aria-label="status">
