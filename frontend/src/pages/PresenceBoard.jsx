@@ -205,7 +205,7 @@ function PresenceBoard() {
     if (coreHoursStatus[uid]) return coreHoursStatus[uid];
     if (isExcused(uid)) return 'excused_absent';
     if (hasUnexcused(uid)) return 'unexcused_absent';
-    return 'compliant';
+    return null;
   };
 
   const entries = Object.entries(combinedUsers);
@@ -494,7 +494,7 @@ function PresenceBoard() {
             return (
               <div className={`timeline-row`} key={`B-${userId}`}>
                 <div className="status-col" aria-label="status">
-                  {status === 'compliant' && (
+                  {status === 'compliant' && hasSession && (
                     <span className="status-icon checkmark">✓</span>
                   )}
                   {status === 'excused_absent' && (
@@ -532,7 +532,7 @@ function PresenceBoard() {
             return (
               <div className={`timeline-row`} key={`C-${userId}`}>
                 <div className="status-col" aria-label="status">
-                  {status === 'compliant' && (
+                  {status === 'compliant' && user.sessions.length > 0 && (
                     <span className="status-icon checkmark">✓</span>
                   )}
                   {status === 'excused_absent' && (
@@ -560,7 +560,7 @@ function PresenceBoard() {
             return (
               <div className={`timeline-row`} key={`D-${userId}`}>
                 <div className="status-col" aria-label="status">
-                  {status === 'compliant' && (
+                  {status === 'compliant' && user.sessions.length > 0 && (
                     <span className="status-icon checkmark">✓</span>
                   )}
                   {status === 'excused_absent' && (
