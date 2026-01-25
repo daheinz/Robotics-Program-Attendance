@@ -210,7 +210,12 @@ function PresenceBoard() {
   // Group B: Students with sessions today (include excused as well)
   const groupB = entries
     .filter(([id, u]) => u.role === 'student' && u.sessions.length > 0)
-    .sort((a, b) => a[1].alias.localeCompare(b[1].alias));
+    .sort((a, b) => {
+      const aActive = a[1].sessions.some(s => !s.check_out_time);
+      const bActive = b[1].sessions.some(s => !s.check_out_time);
+      if (aActive !== bActive) return aActive ? -1 : 1;
+      return a[1].alias.localeCompare(b[1].alias);
+    });
   const groupBIds = new Set(groupB.map(([id]) => String(id)));
   // Group C: Students with excused absences (today) and no sessions
   const groupC = students
