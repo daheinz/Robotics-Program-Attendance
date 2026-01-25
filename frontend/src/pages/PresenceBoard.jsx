@@ -530,7 +530,7 @@ function PresenceBoard() {
                     return (
                       <div
                         key={idx}
-                        className={`timeline-bar${isActive ? ' active' : ''}`}
+                        className={`timeline-bar${isActive ? ' active' : ''}${user.role === 'mentor' || user.role === 'coach' ? ' mentor-session' : ''}`}
                         style={{ left: `${left}%`, width: `${width}%` }}
                         title={`In: ${new Date(session.check_in_time).toLocaleTimeString()}${session.check_out_time ? `\nOut: ${new Date(session.check_out_time).toLocaleTimeString()}` : '\nStill on site'}`}
                       ></div>
@@ -570,7 +570,7 @@ function PresenceBoard() {
                     return (
                       <div
                         key={idx}
-                        className={`timeline-bar${isActive ? ' active' : ''}`}
+                        className={`timeline-bar${isActive ? ' active' : ''}${user.role === 'mentor' || user.role === 'coach' ? ' mentor-session' : ''}`}
                         style={{ left: `${left}%`, width: `${width}%` }}
                         title={`In: ${new Date(session.check_in_time).toLocaleTimeString()}${session.check_out_time ? `\nOut: ${new Date(session.check_out_time).toLocaleTimeString()}` : '\nStill on site'}`}
                       ></div>

@@ -410,6 +410,11 @@
   opacity: 1;
   box-shadow: 0 2px 14px rgba(255, 159, 28, 0.45);
 }
+
+.timeline-bar.active.mentor-session {
+  background: var(--color-mentor-checked-in, #4299e1);
+  box-shadow: 0 2px 14px rgba(66, 153, 225, 0.45);
+}
 .presence-board {
   min-height: 100vh;
   width: 100%;
