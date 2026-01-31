@@ -294,9 +294,9 @@ export default function ReportingPage() {
     }
 
     if (reportType === 'valid-sessions') {
-      let csv = 'Student Name,Alias,Completed Sessions,Unexcused Absences,Valid Sessions\n';
+      let csv = 'Student Name,Alias,Required Days,Absences,Unexcused Absences,Approved Absences,Valid Sessions\n';
       reportData.students.forEach(student => {
-        csv += `"${student.first_name} ${student.last_name}","${student.alias}",${student.completed_sessions},${student.unexcused_count},${student.valid_sessions}\n`;
+        csv += `"${student.first_name} ${student.last_name}","${student.alias}",${student.required_count},${student.absences_count},${student.unexcused_count},${student.approved_count},${student.valid_sessions}\n`;
       });
       downloadFile(csv, `valid_sessions_${startDate}_to_${endDate}.csv`, 'text/csv');
     }
@@ -322,7 +322,7 @@ export default function ReportingPage() {
             <select value={reportSelection} onChange={(e) => setReportSelection(e.target.value)}>
               <option value="summary">All Student Attendance Summary</option>
               <option value="student-totals">All Student Totals (durations + absences)</option>
-              <option value="valid-sessions">Valid Sessions (completed minus unexcused)</option>
+              <option value="valid-sessions">Valid Required Days (no absences)</option>
               <option value="attendance-students">All Student Attendance (sessions)</option>
               <option value="absences-students">All Student Absences</option>
               <option value="attendance-student">Single Student Attendance</option>
@@ -511,7 +511,7 @@ export default function ReportingPage() {
       {reportData && reportType === 'valid-sessions' && !loading && (
         <div className="report-container">
           <div className="report-header">
-            <h2>Valid Sessions Report</h2>
+            <h2>Valid Required Days Report</h2>
             <p>Period: {reportData.startDate} to {reportData.endDate} ({reportData.seasonType})</p>
           </div>
 
@@ -523,9 +523,11 @@ export default function ReportingPage() {
                 <tr>
                   <th>Student Name</th>
                   <th>Alias</th>
-                  <th>Completed Sessions</th>
-                  <th>Unexcused Absences</th>
-                  <th>Valid Sessions</th>
+                  <th>Required Days</th>
+                  <th>Absences</th>
+                  <th>Unexcused</th>
+                  <th>Approved</th>
+                  <th>Valid Days</th>
                 </tr>
               </thead>
               <tbody>
@@ -533,8 +535,10 @@ export default function ReportingPage() {
                   <tr key={student.id}>
                     <td>{student.first_name} {student.last_name}</td>
                     <td>{student.alias}</td>
-                    <td>{student.completed_sessions}</td>
+                    <td>{student.required_count}</td>
+                    <td>{student.absences_count}</td>
                     <td className="text-danger">{student.unexcused_count}</td>
+                    <td className="text-success">{student.approved_count}</td>
                     <td className="font-bold">{student.valid_sessions}</td>
                   </tr>
                 ))}

@@ -4,6 +4,38 @@ const AttendanceSession = require('../models/AttendanceSession');
 const CoreHours = require('../models/CoreHours');
 const db = require('../config/database');
 
+const formatDateLocal = (dateObj) => {
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const buildRequiredDates = async (startDate, endDate, seasonType = 'build') => {
+  const coreHours = await CoreHours.findBySeasonType(seasonType);
+  const requiredDays = new Set(
+    coreHours
+      .filter((ch) => ch.type === 'required')
+      .map((ch) => Number(ch.day_of_week))
+  );
+
+  if (requiredDays.size === 0) {
+    return [];
+  }
+
+  const dates = [];
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T00:00:00`);
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    if (requiredDays.has(d.getDay())) {
+      dates.push(formatDateLocal(d));
+    }
+  }
+
+  return dates;
+};
+
 // Helper function to check if student met core hours requirement
 const checkCoreHoursCompliance = async (studentId, dateStr, dayOfWeek, seasonType = 'build') => {
   try {
@@ -406,7 +438,7 @@ exports.getStudentTotalsReport = async (req, res, next) => {
   }
 };
 
-// Valid sessions report (completed sessions minus unexcused absences)
+// Valid sessions report (required days with no absence records)
 exports.getValidSessionsReport = async (req, res, next) => {
   try {
     const { startDate, endDate, seasonType = 'build' } = req.query;
@@ -415,47 +447,75 @@ exports.getValidSessionsReport = async (req, res, next) => {
       return res.status(400).json({ error: 'startDate and endDate are required' });
     }
 
+    const requiredDates = await buildRequiredDates(startDate, endDate, seasonType);
+    const requiredCount = requiredDates.length;
+
+    if (requiredCount === 0) {
+      const students = await User.findAll({ role: 'student' });
+      const mapped = students.map((student) => ({
+        id: student.id,
+        alias: student.alias,
+        first_name: student.first_name,
+        last_name: student.last_name,
+        required_count: 0,
+        absences_count: 0,
+        unexcused_count: 0,
+        approved_count: 0,
+        valid_sessions: 0,
+      }));
+
+      return res.json({
+        startDate,
+        endDate,
+        seasonType,
+        requiredCount,
+        students: mapped,
+      });
+    }
+
     const query = `
       SELECT
         u.id,
         u.alias,
         u.first_name,
         u.last_name,
-        COALESCE(att.completed_sessions, 0) AS completed_sessions,
+        COALESCE(abs.absences_count, 0) AS absences_count,
         COALESCE(abs.unexcused_count, 0) AS unexcused_count,
-        GREATEST(COALESCE(att.completed_sessions, 0) - COALESCE(abs.unexcused_count, 0), 0) AS valid_sessions
+        COALESCE(abs.approved_count, 0) AS approved_count
       FROM users u
       LEFT JOIN (
         SELECT
-          a.user_id,
-          COUNT(*) AS completed_sessions
-        FROM attendance_sessions a
-        WHERE a.check_out_time IS NOT NULL
-          AND a.check_in_time >= ($1::date)::timestamp
-          AND a.check_in_time < ($2::date + interval '1 day')::timestamp
-        GROUP BY a.user_id
-      ) att ON att.user_id = u.id
-      LEFT JOIN (
-        SELECT
           a.student_id,
-          SUM(CASE WHEN a.status = 'unapproved' THEN 1 ELSE 0 END) AS unexcused_count
+          COUNT(*) AS absences_count,
+          SUM(CASE WHEN a.status = 'unapproved' THEN 1 ELSE 0 END) AS unexcused_count,
+          SUM(CASE WHEN a.status = 'approved' THEN 1 ELSE 0 END) AS approved_count
         FROM absences a
-        WHERE a.absence_date BETWEEN $1 AND $2
-          AND ($3::text IS NULL OR a.season_type = $3)
+        WHERE a.absence_date = ANY($1::date[])
+          AND ($2::text IS NULL OR a.season_type = $2)
         GROUP BY a.student_id
       ) abs ON abs.student_id = u.id
       WHERE u.is_active = true AND u.role = 'student'
       ORDER BY u.alias ASC
     `;
 
-    const params = [startDate, endDate, seasonType || null];
+    const params = [requiredDates, seasonType || null];
     const result = await db.query(query, params);
+
+    const students = result.rows.map((student) => {
+      const absencesCount = Number(student.absences_count || 0);
+      return {
+        ...student,
+        required_count: requiredCount,
+        valid_sessions: Math.max(requiredCount - absencesCount, 0),
+      };
+    });
 
     res.json({
       startDate,
       endDate,
       seasonType,
-      students: result.rows,
+      requiredCount,
+      students,
     });
   } catch (error) {
     next(error);
