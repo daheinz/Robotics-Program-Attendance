@@ -586,9 +586,12 @@ class AttendanceController {
   static async getLeaderboard(req, res) {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
-      const timezone = process.env.APP_TIMEZONE || process.env.TZ || 'UTC';
+      const timezone = process.env.APP_TIMEZONE
+        || process.env.TZ
+        || Intl.DateTimeFormat().resolvedOptions().timeZone
+        || 'UTC';
       const snapshotDate = getLocalDateString();
-      const snapshotKey = `${snapshotDate}:${limit}`;
+      const snapshotKey = `${snapshotDate}:${limit}:${timezone}`;
       let snapshotCreated = false;
       let baseline = null;
 
