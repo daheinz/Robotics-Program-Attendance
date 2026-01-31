@@ -28,4 +28,7 @@ router.get('/absences', reportController.getAbsencesReport);
 // GET /api/reports/student-totals - Student totals report
 router.get('/student-totals', reportController.getStudentTotalsReport);
 
+// GET /api/reports/valid-sessions - Valid sessions report
+router.get('/valid-sessions', reportController.getValidSessionsReport);
+
 module.exports = router;

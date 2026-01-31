@@ -168,6 +168,14 @@ export default function ReportingPage() {
         setReportData(response.data);
         setReportType('student-totals');
       }
+
+      if (reportSelection === 'valid-sessions') {
+        const response = await api.get('/reports/valid-sessions', {
+          params: { startDate, endDate, seasonType },
+        });
+        setReportData(response.data);
+        setReportType('valid-sessions');
+      }
     } catch (error) {
       console.error('Error generating report:', error);
       alert('Failed to generate report: ' + error.response?.data?.error);
@@ -284,6 +292,14 @@ export default function ReportingPage() {
       });
       downloadFile(csv, `student_totals_${startDate}_to_${endDate}.csv`, 'text/csv');
     }
+
+    if (reportType === 'valid-sessions') {
+      let csv = 'Student Name,Alias,Completed Sessions,Unexcused Absences,Valid Sessions\n';
+      reportData.students.forEach(student => {
+        csv += `"${student.first_name} ${student.last_name}","${student.alias}",${student.completed_sessions},${student.unexcused_count},${student.valid_sessions}\n`;
+      });
+      downloadFile(csv, `valid_sessions_${startDate}_to_${endDate}.csv`, 'text/csv');
+    }
   };
 
   return (
@@ -306,6 +322,7 @@ export default function ReportingPage() {
             <select value={reportSelection} onChange={(e) => setReportSelection(e.target.value)}>
               <option value="summary">All Student Attendance Summary</option>
               <option value="student-totals">All Student Totals (durations + absences)</option>
+              <option value="valid-sessions">Valid Sessions (completed minus unexcused)</option>
               <option value="attendance-students">All Student Attendance (sessions)</option>
               <option value="absences-students">All Student Absences</option>
               <option value="attendance-student">Single Student Attendance</option>
@@ -483,6 +500,42 @@ export default function ReportingPage() {
                     <td>{Math.round(Number(student.total_minutes || 0))}</td>
                     <td className="text-success">{student.excused_count}</td>
                     <td className="text-danger">{student.unexcused_count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {reportData && reportType === 'valid-sessions' && !loading && (
+        <div className="report-container">
+          <div className="report-header">
+            <h2>Valid Sessions Report</h2>
+            <p>Period: {reportData.startDate} to {reportData.endDate} ({reportData.seasonType})</p>
+          </div>
+
+          {reportData.students.length === 0 ? (
+            <p className="no-data">No students found for this period</p>
+          ) : (
+            <table className="report-table">
+              <thead>
+                <tr>
+                  <th>Student Name</th>
+                  <th>Alias</th>
+                  <th>Completed Sessions</th>
+                  <th>Unexcused Absences</th>
+                  <th>Valid Sessions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reportData.students.map((student) => (
+                  <tr key={student.id}>
+                    <td>{student.first_name} {student.last_name}</td>
+                    <td>{student.alias}</td>
+                    <td>{student.completed_sessions}</td>
+                    <td className="text-danger">{student.unexcused_count}</td>
+                    <td className="font-bold">{student.valid_sessions}</td>
                   </tr>
                 ))}
               </tbody>

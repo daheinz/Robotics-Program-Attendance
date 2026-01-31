@@ -405,3 +405,59 @@ exports.getStudentTotalsReport = async (req, res, next) => {
     next(error);
   }
 };
+
+// Valid sessions report (completed sessions minus unexcused absences)
+exports.getValidSessionsReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate, seasonType = 'build' } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'startDate and endDate are required' });
+    }
+
+    const query = `
+      SELECT
+        u.id,
+        u.alias,
+        u.first_name,
+        u.last_name,
+        COALESCE(att.completed_sessions, 0) AS completed_sessions,
+        COALESCE(abs.unexcused_count, 0) AS unexcused_count,
+        GREATEST(COALESCE(att.completed_sessions, 0) - COALESCE(abs.unexcused_count, 0), 0) AS valid_sessions
+      FROM users u
+      LEFT JOIN (
+        SELECT
+          a.user_id,
+          COUNT(*) AS completed_sessions
+        FROM attendance_sessions a
+        WHERE a.check_out_time IS NOT NULL
+          AND a.check_in_time >= ($1::date)::timestamp
+          AND a.check_in_time < ($2::date + interval '1 day')::timestamp
+        GROUP BY a.user_id
+      ) att ON att.user_id = u.id
+      LEFT JOIN (
+        SELECT
+          a.student_id,
+          SUM(CASE WHEN a.status = 'unapproved' THEN 1 ELSE 0 END) AS unexcused_count
+        FROM absences a
+        WHERE a.absence_date BETWEEN $1 AND $2
+          AND ($3::text IS NULL OR a.season_type = $3)
+        GROUP BY a.student_id
+      ) abs ON abs.student_id = u.id
+      WHERE u.is_active = true AND u.role = 'student'
+      ORDER BY u.alias ASC
+    `;
+
+    const params = [startDate, endDate, seasonType || null];
+    const result = await db.query(query, params);
+
+    res.json({
+      startDate,
+      endDate,
+      seasonType,
+      students: result.rows,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
