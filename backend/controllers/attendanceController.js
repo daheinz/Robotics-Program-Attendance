@@ -590,13 +590,14 @@ class AttendanceController {
         || process.env.TZ
         || Intl.DateTimeFormat().resolvedOptions().timeZone
         || 'UTC';
+      const includeActiveSession = String(process.env.LEADERBOARD_INCLUDE_ACTIVE_SESSION ?? 'true').toLowerCase() === 'true';
       const snapshotDate = getLocalDateString();
-      const snapshotKey = `${snapshotDate}:${limit}:${timezone}`;
+      const snapshotKey = `${snapshotDate}:${limit}:${timezone}:${includeActiveSession}`;
       let snapshotCreated = false;
       let baseline = null;
 
       if (!leaderboardSnapshots[snapshotKey]) {
-        baseline = await AttendanceSession.getLeaderboard(limit, timezone);
+        baseline = await AttendanceSession.getLeaderboard(limit, timezone, includeActiveSession);
         const positions = {};
         baseline.forEach((entry, index) => {
           positions[String(entry.id)] = index + 1;
@@ -608,7 +609,7 @@ class AttendanceController {
         snapshotCreated = true;
       }
 
-      const leaderboard = baseline || await AttendanceSession.getLeaderboard(limit, timezone);
+      const leaderboard = baseline || await AttendanceSession.getLeaderboard(limit, timezone, includeActiveSession);
       const baselinePositions = leaderboardSnapshots[snapshotKey].positions || {};
 
       const enriched = leaderboard.map((entry) => ({
