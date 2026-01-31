@@ -133,6 +133,10 @@ function StudentDashboard({ userName, userId, userRole, onLogout }) {
   const [absenceHistory, setAbsenceHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  const totalSessions = attendanceHistory.length;
+  const totalApprovedAbsences = absenceHistory.filter((abs) => abs.status === 'approved').length;
+  const totalUnapprovedAbsences = absenceHistory.filter((abs) => abs.status === 'unapproved').length;
+
   useEffect(() => {
     checkInStatus();
     loadContacts();
@@ -393,6 +397,20 @@ function StudentDashboard({ userName, userId, userRole, onLogout }) {
               <div className="user-identity">
                 <span className="user-name">{userName}</span>
                 <span className="user-role-badge">{userRole}</span>
+              </div>
+              <div className="user-counters">
+                <div className="counter-card">
+                  <span className="counter-label">Total Session Count</span>
+                  <span className="counter-value">{totalSessions}</span>
+                </div>
+                <div className="counter-card">
+                  <span className="counter-label">Total Approved Absences</span>
+                  <span className="counter-value">{totalApprovedAbsences}</span>
+                </div>
+                <div className="counter-card">
+                  <span className="counter-label">Total Unapproved Absences</span>
+                  <span className="counter-value">{totalUnapprovedAbsences}</span>
+                </div>
               </div>
               
               <div className="status-indicator">
