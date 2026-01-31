@@ -586,13 +586,14 @@ class AttendanceController {
   static async getLeaderboard(req, res) {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+      const timezone = process.env.APP_TIMEZONE || process.env.TZ || 'UTC';
       const snapshotDate = getLocalDateString();
       const snapshotKey = `${snapshotDate}:${limit}`;
       let snapshotCreated = false;
       let baseline = null;
 
       if (!leaderboardSnapshots[snapshotKey]) {
-        baseline = await AttendanceSession.getLeaderboard(limit);
+        baseline = await AttendanceSession.getLeaderboard(limit, timezone);
         const positions = {};
         baseline.forEach((entry, index) => {
           positions[String(entry.id)] = index + 1;
@@ -604,7 +605,7 @@ class AttendanceController {
         snapshotCreated = true;
       }
 
-      const leaderboard = baseline || await AttendanceSession.getLeaderboard(limit);
+      const leaderboard = baseline || await AttendanceSession.getLeaderboard(limit, timezone);
       const baselinePositions = leaderboardSnapshots[snapshotKey].positions || {};
 
       const enriched = leaderboard.map((entry) => ({

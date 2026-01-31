@@ -268,7 +268,7 @@ class AttendanceSession {
   }
 
   // Get top students by total attendance hours
-  static async getLeaderboard(limit = 10) {
+  static async getLeaderboard(limit = 10, timezone = 'UTC') {
     const query = `
       SELECT 
         u.id,
@@ -278,7 +278,7 @@ class AttendanceSession {
         COALESCE(ROUND(SUM(
           CASE
             WHEN a.check_out_time IS NOT NULL THEN COALESCE(a.duration_minutes, 0)
-            WHEN a.check_in_time IS NOT NULL THEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.check_in_time)) / 60
+            WHEN a.check_in_time IS NOT NULL THEN EXTRACT(EPOCH FROM ((CURRENT_TIMESTAMP AT TIME ZONE $2) - a.check_in_time)) / 60
             ELSE 0
           END
         ) / 60.0, 2), 0) as total_hours,
@@ -291,7 +291,7 @@ class AttendanceSession {
       ORDER BY total_hours DESC
       LIMIT $1
     `;
-    const result = await db.query(query, [limit]);
+    const result = await db.query(query, [limit, timezone]);
     return result.rows;
   }
 }
