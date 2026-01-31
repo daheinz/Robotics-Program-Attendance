@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd /var/www/RoboticsAttendance
+
+sudo chown -R atmgr:atmgr frontend/node_modules
+
+git stash
+
+git pull origin main
+
+cd ./backend
+
+sudo npm ci --only=production
+
+sudo systemctl restart rob-attendance-backend
+
+# sudo systemctl status rob-attendance-backend
+
+cd ../frontend
+
+sudo npm ci
+
+sudo npm run build
+
+sudo cp -r dist/* /var/www/rob-attendance-site/
+
+sudo chown -R www-data:www-data /var/www/rob-attendance-site
+
+sudo systemctl reload nginx
+
+curl http://127.0.0.1:3000/health
